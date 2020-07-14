@@ -1,0 +1,66 @@
+运维平台docker-compose目录
+/opt/docker/ops-monitoring-master
+前端docker： evo-operation-platform-web 
+后端docker： evo-ops-platform
+docker ps 查看容器  docker ps -a 查看所有包括stop的容器
+docker logs xxx 查看日志
+docker restart xx 重启
+docker rm -f xx 删除之后  docker-compose up -d 启动容器
+
+
+
+
+
+
+
+主的evo服务在 /opt/docker下  
+主上面原来没给从服务器得时候是单机部署得  所以也有一个运维平台
+应该也在/opt/docker/ops-monitoring-master下    
+里面的运维平台现在应该是stop的或者被删除的状态 可通过docker start 或者compose-compose up -d起来
+但是如果要让主服务器的运维平台能够使用需要配置主从的saltstack
+
+原来是从配了 salt-master和salt-minion   主配了 salt-minion
+现在需要主配置salt-master连接从的salt-minion
+主上面原来就有salt-master了  可以通过 systemctl status salt-matser查看状态  如果是关闭的 start打开即可
+从上面
+
+配置操作：
+拷贝从上面的master的密钥到主上同一个目录，覆盖即可
+/etc/salt/pki/master/master.pub    /etc/salt/pki/master/master.pem
+编辑从上的minion文件:
+vim /etc/salt/minion
+把原来的      
+master: 192.168.21.230(从ip)
+改成             
+master:
+    - 192.168.21.230(从ip)
+    - 192.168.21.185(主ip)
+然后从上执行
+/bin/rm -rf /etc/salt/pki/minion/minion_master.pub
+然后从上重启minion
+systemctl restart salt-minion
+从验证：
+salt "*" test.ping
+返回true即可
+
+主上：
+salt-key  -L  可以显示刚刚配置的从
+salt-key  -A  添加密钥
+salt "*" test.ping  测试
+
+然后再主上打开minion文件
+vim /etc/salt/minion
+把原来的      
+master: 192.168.21.230(从ip)
+改成             
+master:
+    - 192.168.21.230(从ip)
+    - 192.168.21.185(主ip)
+然后从上执行
+/bin/rm -rf /etc/salt/pki/minion/minion_master.pub
+然后从上重启minion
+systemctl restart salt-minion
+再分别再主从上测试
+
+
+

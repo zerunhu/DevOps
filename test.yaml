@@ -1,0 +1,70 @@
+stages:
+  - build
+  - tag
+services:
+  - name: harbor2.flashhold.com/library/docker:18.06.1-ce-dind
+    command: ["dockerd-entrypoint.sh", "--insecure-registry=harbor2.flashhold.com","--ins
+    ecure-registry=172.31.238.10","--insecure-registry=192.168.21.107","--insecure-registry=192.168.20.20:8888"]
+cache:
+  paths:
+    - .m2/
+
+variables:
+  KUBECONFIG: /etc/deploy/config
+  COMPANY: "evo-baseapp"
+  BASEAPP_FLAG: 1
+  APP: "evo-ops-platform"
+  TAG: $CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  CONTAINERPORT: 8021
+  SERVICEPORT: 80
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://localhost:2375
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2"
+
+build_job:
+  image: harbor2.flashhold.com/library/java8-ci-base:1.8
+  retry: 1
+  stage: build
+  only:
+    - web
+    #    - /release*/
+    - triggers
+    #    - tags
+    #    - master
+  script:
+    - source /etc/profile
+    - export TAG=`wget -q -O - "http://devops.flashhold.com:8000/get_gitlab_tag_name?branch_name=${CI_COMMIT_REF_SLUG}&gitlab_project_id=${CI_PROJECT_ID}"`
+    - CATEGORY=${TAG%-*}
+    - mvn clean package
+    - jar_file=`find / -name ${APP}.jar -print`
+    - dockerfile=`find / -name Dockerfile -print`
+    - opspythonfile=`find / -name ops_python.py -print`
+    - sed -i 's|192.168.20.20:8888/kc-evo/||g' ${dockerfile}
+    - mkdir -p ${APP}:${TAG}/target
+    - echo "docker build -t ${APP}:${TAG} ./" > ${APP}:${TAG}/build.sh
+    - chmod u+x ${APP}:${TAG}/build.sh
+    - cp ${jar_file} ${APP}:${TAG}/target
+    - cp ${dockerfile} ${APP}:${TAG}
+    - cp ${opspythonfile} ${APP}:${TAG}
+    - tar -czf ${APP}:${TAG}.tar.gz ${APP}:${TAG}/*
+    - ssh -o StrictHostKeyChecking=no 192.168.22.30 "mkdir -p /var/www/html/evo/${COMPANY}/${APP}/${CATEGORY}"
+    - scp -o StrictHostKeyChecking=no ./${APP}:${TAG}.tar.gz 192.168.22.30:/var/www/html/evo/${COMPANY}/${APP}/${CATEGORY}
+
+tag_job:
+  image: harbor2.flashhold.com/library/advance-devth-helm:v2.12.3
+  retry: 1
+  stage: tag
+  only:
+    - web
+    - triggers
+    #    - tags
+    #    - master
+  script:
+    - export TAG=`curl -q "http://devops.flashhold.com:8000/get_gitlab_helm_tag_name?gitlab_project_id=${CI_PROJECT_ID}"`
+    - curl -q "http://devops.flashhold.com:8000/set_app_tag?tag_name=${TAG}&gitlab_project_id=${CI_PROJECT_ID}&branch_name=${CI_COMMIT_REF_NAME}"
+
+
+
+
+
+

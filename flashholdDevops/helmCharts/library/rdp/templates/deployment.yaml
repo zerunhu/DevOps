@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app.kubernetes.io/name: {{ include "rdp.name" . }}
+    helm.sh/chart: {{ include "rdp.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rdp.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rdp.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: dependency
+          image: harbor2.flashhold.com/library/mysql-client:rdp
+          command: ['sh', '-c', 'until mysql -uroot -p123456 -hmysql -e "use rdp_server;use evo_wds_base;"; do echo waiting for rdp_sql_import; sleep 2; done;']
+      containers:
+        - name: {{ .Chart.Name }}-rdp
+          image: "{{ .Values.image.rdp.repository }}:{{ .Values.image.rdp.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: http-rdp
+            containerPort: 8081
+            protocol: TCP
+          volumeMounts:
+          - name: config-rdp
+            mountPath: /app/tomcat/webapps/RDP-SERVER/WEB-INF/classes/application-prod.yml
+            subPath: application-prod.yml
+        - name: {{ .Chart.Name }}-etl
+          image: "{{ .Values.image.etl.repository }}:{{ .Values.image.etl.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: http-etl
+            containerPort: 8090
+            protocol: TCP
+          volumeMounts:
+          - name: config-etl
+            mountPath: /evo/evo-wds/evo_wds_etl/conf/etl_cfg.json
+            subPath: etl_cfg.json
+      volumes:
+      - name: config-rdp
+        configMap:
+          name: config-rdp
+      - name: config-etl
+        configMap:
+          name: config-etl
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

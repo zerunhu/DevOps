@@ -1,0 +1,86 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} group {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户组</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" >{% csrf_token %}
+                {% if form.name or create %}
+                    <span class="section">新建用户组</span>
+                {% else %}
+                    <span class="section">更新用户组</span>
+                {% endif %}
+                    {% if field_error %}
+                           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+                              </button>
+                              {{ field_error }}
+                            </div>
+                    {% endif %}
+                <div class="item form-group">
+
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.name.id_for_label }}">{{ form.name.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.name }} {{ form.name.errors }}
+                  </div>
+                </div>
+                <div class="item form-group">
+
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.nameSlug.id_for_label }}">{{ form.nameSlug.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.nameSlug }} {{ form.nameSlug.errors }}
+                  </div>
+                </div>
+
+
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'group_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+
+  {{ block.super }}
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+            $('#search').multiselect({
+                search: {
+                    left: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                    right: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                },
+                fireSearch: function(value) {
+                    return value.length > 3;
+                }
+            });
+    });
+</script>
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

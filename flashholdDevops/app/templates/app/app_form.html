@@ -1,0 +1,148 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} Form Validation {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>添加应用</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+        {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+<form action="" method="post" class="form-horizontal form-label-left" >{% csrf_token %}
+
+                 <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">应用名：<span class="required">*</span>
+                  </label>
+                  <input type="text" placeholder="例:{{ project | upper}}-interface" name="app_name" style="margin-top:6px">
+                </div>
+
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">描述：<span class="required">*</span>
+                  </label>
+                  <input type="text" name="app_desc" style="margin-top:5px">
+                </div>
+
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">项目：<span class="required">*</span>
+                  </label>
+                      <select name="app_project" id="content2" style="margin-top:5px">
+                          <option value="{{ project }}">{{ project }}</option>
+                      </select>
+                </div>
+
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">项目骨架：
+                  </label>
+<!--                  <input type="textarea" name="app_desc" style="margin-top:5px;width:200px;height:200px">-->
+                    <textarea style="margin-top:10px;width: 610px; height: 240px" name="project_mvn"
+                    placeholder=
+"mvn org.apache.maven.plugins:maven-archetype-plugin:2.4:generate \
+  -DarchetypeCatalog=http://192.168.20.20:8081/nexus/repository/snapshot/archetype-catalog.xml \
+  -DarchetypeGroupId=com.kc.evo \
+  -DarchetypeArtifactId=evo-interface-v3-archetype \
+  -DarchetypeVersion=2.0.0-20191107.022155-2 \
+  -DgroupId={项目GroupId} \
+  -DartifactId={项目名} \
+  -Dmaintainer={开发者} \
+  -Dversion={1.0.0-SNAPSHOT} \
+  -Dproject-number={项目代码} \
+  -Dpackage={包名}"
+                    ></textarea>
+                </div>
+
+
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'user_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+</form>
+                <div class="ln_solid"></div>
+                <p style="margin-left:100px">
+                    <b style="color:red">注意：</b>
+                    项目骨架目前只支持 interface和printer两个应用。其他应用只不接收参数,只创建一个空的gitlab项目。<br>
+                    interface和printer将会通过骨架中输入的命令下载对应的项目包并提交到gitlab项目中。
+                </p>
+                <p style="margin-left:100px">
+                    <b>interface骨架示例:</b><br>
+mvn org.apache.maven.plugins:maven-archetype-plugin:2.4:generate \<br>
+  -DarchetypeCatalog=http://192.168.20.20:8081/nexus/repository/snapshot/archetype-catalog.xml \<br>
+  -DarchetypeGroupId=com.kc.evo \<br>
+  -DarchetypeArtifactId=evo-interface-v3-archetype \<br>
+  -DarchetypeVersion=2.0.0-20191107.022155-2 \<br>
+  -DgroupId=com.kc.evo \<br>
+  -DartifactId=A51050-interface \<br>
+  -Dmaintainer=sunwu \<br>
+  -Dversion=2.0.0-SNAPSHOT \<br>
+  -Dproject-number=A51050-interface \<br>
+  -Dpackage=com.kc.evo.interface<br>
+                </p>
+                <p style="margin-left:100px">
+                    <b>printer骨架示例:</b><br>
+mvn org.apache.maven.plugins:maven-archetype-plugin:2.4:generate \<br>
+  -DarchetypeCatalog=http://192.168.20.20:8081/nexus/repository/snapshot/archetype-catalog.xml \<br>
+  -DarchetypeGroupId=com.kc.evo \<br>
+  -DarchetypeArtifactId=evo-printer-archetype \<br>
+  -DarchetypeVersion=2.0.0-20191127.054554-7 \<br>
+  -DgroupId=com.kc.evo \<br>
+  -DartifactId=A51050-printer \<br>
+  -Dversion=2.0.0-SNAPSHOT \<br>
+  -Dproject-company=A51050-printer \<br>
+  -Dpackage=com.kc.evo.interface \<br>
+  -Dclient-version=A51050-2.0.0-SNAPSHOT<br>
+                </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+{{ block.super }}
+<script>
+    $(function (){
+        {#$.ajax({#}
+        {#    async:false,#}
+        {#    cache:true,#}
+        {#    url: "{% url 'get_baseapp_tree' %}",#}
+        {#    data: {},#}
+        {#    type: "post",#}
+        {#    dataType:'json',#}
+        {#    success:function(result){#}
+        {#        $('#baseapp_tree').jstree({ 'core' : {#}
+        {#                "multiple" : false,#}
+        {#                'data' : eval(result.data),#}
+        {#            },#}
+        {#            "state" : { "key" : "app_key" },#}
+        {#            "plugins" : ["checkbox","state"]}#}
+        {#            );#}
+        {#        },#}
+        {#    });#}
+        {##}
+        {#$("#send").click(function () {#}
+        {#    $("input[name='jstree_data']").val(localStorage.getItem("app_key"));#}
+        {#    localStorage.removeItem("app_key");#}
+        {#})#}
+    })
+</script>
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

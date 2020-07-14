@@ -1,0 +1,137 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} Form Validation {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+     <div class="clearfix"></div>
+      {% if msg %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ msg }}
+            </div>
+      {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" >{% csrf_token %}
+                    <span class="section">版本打包</span>
+
+                <div class="item form-group" id="deploy">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="form.members.label_tag ">环境名<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.deploy }}{{ form.deploy.errors }}
+                  </div>
+                </div>
+                  <div class="item form-group" id="deploy">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="form.members.label_tag ">项目名<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.project_name }}{{ form.project_name.errors }}
+                  </div>
+                </div>
+                  <div class="item form-group" id="deploy">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="form.members.label_tag ">版本<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.version }}{{ form.version.errors }}
+                  </div>
+                </div>
+                <div class="x_panel">
+                    <div class="x_title">
+                      <h2>部署清单 </h2>
+                      <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+
+                      <table class="table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>应用</th>
+                            <th>镜像</th>
+                          </tr>
+                        </thead>
+                        <tbody id="data">
+                        </tbody>
+                      </table>
+
+                    </div>
+                </div>
+                <div class="item form-group">
+                  <div class="x_panel">
+                      <div class="x_title">
+                        <h2>模板<small>docker-compose.yml</small></h2>
+                        <div class="clearfix"></div>
+                      </div>
+                      <div class="x_content">
+                        <div id="alerts"></div>
+                        <div class="btn-toolbar editor" data-role="editor-toolbar" data-target="#editor-one">
+                          <div class="btn-group">
+                            <a class="btn" data-edit="undo" title="Undo (Ctrl/Cmd+Z)"><i class="fa fa-undo"></i></a>
+                            <a class="btn" data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i class="fa fa-repeat"></i></a>
+                          </div>
+                        </div>
+
+                        <div id="editor-one" class="editor-wrapper"></div>
+                        <textarea name="dc_file" id="dc_file" style="display:none;"></textarea>
+
+                        <br />
+
+                        <div class="ln_solid"></div>
+                      </div>
+                  </div>
+                </div>
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="#" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+$(function () {
+    $("#send").click(function (e) {
+        e.preventDefault();
+        $("#dc_file").val($("#editor-one").html());
+        $("form").submit()
+    })
+    $("#deploy").on('click',"select[name='deploy']",function () {
+                        var html = "";
+                        $.ajax({
+                            async:true,
+                            cache:false,
+                            url: "{% url 'get_deploy_info' %}",
+                            data: {"deploy_id":$("select[name='deploy']").val()},
+                            type: "post",
+                            dataType:'json',
+                            success:function(result){
+                                $("#data").html("");
+                                $.each(result,function (key,val) {
+                                     html = html +'<tr><td>'+val.app_name+'</td>'+'<td>'+val.image_name+'</td></tr>';
+                                });
+                                $("#data").append(html);
+                            },
+                        });
+                  });
+})
+</script>
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

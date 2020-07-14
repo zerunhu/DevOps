@@ -1,0 +1,45 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} 项目 {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>删除环境模板</h3>
+        </div>
+
+      </div>
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" novalidate>{% csrf_token %}
+                 <p>你真的想清楚删除"{{ object }}"环境模板吗? </p>
+
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                      <a href="{% url 'project_list' %}"  class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

@@ -1,0 +1,49 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+         {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+            <div class="x_content">
+
+
+              <span class="section">修改数据集</span>
+               <form action="" method="post" role="form" class="form-horizontal form-label-left" >{% csrf_token %}
+                       <div>
+                           <input type="file" name="f">
+                       </div>
+                    <a href="{% url 'dataset_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+
+
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

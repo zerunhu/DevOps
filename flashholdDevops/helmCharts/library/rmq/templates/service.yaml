@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rmq.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "rmq.name" . }}
+    helm.sh/chart: {{ include "rmq.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http-8080
+    - port: 9876
+      targetPort: 9876
+      protocol: TCP
+      name: http-9876
+    - port: 10911
+      targetPort: 10911
+      protocol: TCP
+      name: http-10911
+  selector:
+    app.kubernetes.io/name: {{ include "rmq.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

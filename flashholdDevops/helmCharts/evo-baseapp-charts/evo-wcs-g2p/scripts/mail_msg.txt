@@ -1,0 +1,2 @@
+Dear {{user}}:
+    你在{{project}}项目{{app}}应用的{{branch}}构建了一个提交，一分钟后通过域名： {{domain}}:{{port}}访问

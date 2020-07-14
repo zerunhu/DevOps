@@ -1,0 +1,131 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+         {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" enctype="multipart/form-data"　>{% csrf_token %}
+                    <span class="section">新建数据集</span>
+                <div class="item form-group">
+
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.name.id_for_label }}">{{ form.name.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.name }}{{ form.name.errors }}
+                  </div>
+                </div>
+                <div class="item form-group">
+
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">项目名<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      <select name="project_name" id="content2">
+                          {% for i in project_name %}
+                          <option value="{{ i }}">{{ i }}</option>
+                          {% endfor %}
+                      </select>
+                  </div>
+                </div>
+
+{#                 <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.imageVersion.id_for_label }}">{{ form.imageVersion.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.imageVersion }}{{ form.imageVersion.errors }}#}
+{#                  </div>#}
+{#                </div>#}
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.software.id_for_label }}">{{ form.f.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.f }}
+                  </div>
+                </div>
+
+{#                <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.username.id_for_label }}">{{ form.username.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.username }}#}
+{#                  </div>#}
+{#                </div>#}
+{#                <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.password.id_for_label }}">{{ form.password.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.password }}#}
+{#                  </div>#}
+{#                </div>#}
+{#                  <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.port.id_for_label }}">{{ form.port.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.port }}#}
+{#                  </div>#}
+{#                </div>#}
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'dataset_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+
+<div class="item form-group">
+
+ <div><a href="http://180.167.23.74:8889/setup/offline/build/clean_data.sql" style="color:green">clean_data.sql</a></div>
+          <span style="color:red">注意:
+sql的文件不宜过大，不同的数据库管理工具工具导出的sql方式不同，在sql文件里如果一条insert 语句超出了mysql默认的max_allowed_packet大小，就会导入失败，环境也就无法成功创建。</span>
+<div>请在导出原有测试场景数据并作为数据集上传之前，执行如上清理sql脚本。其中包含了如下处理步骤：</div>
+<div>• 业务数据清理</div>
+<div> &nbsp &nbsp &nbsp 用小梅的脚本清除业务数据</div>
+<div>• 数据的精简：可以有效减少sql文件大小</div>
+<div> &nbsp &nbsp &nbsp basic_map中只保留最新上线版本地图</div>
+<div> &nbsp &nbsp &nbsp 清除notification中报警记录</div>
+<div> &nbsp &nbsp &nbsp 清除失误复制到basic中的wes表</div>
+<div>• 修复老的测试数据可能造成的basic中flyway校验失败</div>
+<div> &nbsp &nbsp &nbsp DELETE FROM flyway_schema_history WHERE description='i18n'</div>
+<div>• 仿真小车对agv编码的要求</div>
+<div> &nbsp &nbsp &nbsp basic_agv中小车要从192168001001的格式开始递增，这样仿真小车才能以默认设置启动</div>
+<div>• 处理启动仿真小车有重叠的问题</div>
+<div> &nbsp &nbsp &nbsp 杨大伟：先清空rcs_agv_status 这张表</div>
+
+
+                </div>
+
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

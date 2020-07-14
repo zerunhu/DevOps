@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    controller-uid: a1f2b616-47ff-11ea-9720-eeeeeeeeeeee
+    job-name: init-db
+  name: init-db
+  namespace: deploy-1580897333
+spec:
+  backoffLimit: 4
+  completions: 1
+  parallelism: 1
+  selector:
+    matchLabels:
+      controller-uid: a1f2b616-47ff-11ea-9720-eeeeeeeeeeee
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        controller-uid: a1f2b616-47ff-11ea-9720-eeeeeeeeeeee
+        job-name: init-db
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - mysql -h mysql -uroot -p${MYSQL_ROOT_PASSWORD}  -D mysql -e "source /sql/${TAG}.sql"
+        env:
+        - name: TAG
+          value: shentong_200108_i18n
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: mysql-root-password
+              name: mysql
+              optional: true
+        image: harbor2.flashhold.com/library/mysql-client:shentong_200108_i18n
+        imagePullPolicy: IfNotPresent
+        name: source-sql
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - until nc -z mysql 3306 ; do echo waiting for mysql; sleep 2; done;
+        image: harbor2.flashhold.com/library/mysql-client:shentong_200108_i18n
+        imagePullPolicy: Always
+        name: init
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,98 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+          {% if field_error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ field_error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" >{% csrf_token %}
+                {% if form.name or create  %}
+                    <span class="section">新建用户</span>
+                {% else %}
+                    <span class="section">更新用户</span>
+                {% endif %}
+
+                <div class="item form-group">
+
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.username.id_for_label }}">{{ form.username.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.username }}{{ form.username.errors }}
+                  </div>
+                </div>
+                <div class="item form-group">
+
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.last_name }}{{ form.last_name.errors }}
+                  </div>
+                </div>
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.password.id_for_label }}">{{ form.password.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.password }}{{ form.password.errors }}
+                  </div>
+                </div>
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.email.id_for_label }}">{{ form.email.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.email }}{{ form.email.errors }}
+                  </div>
+                </div>
+                 <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.groups.id_for_label }}">{{ form.groups.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.groups }}
+                  </div>
+                </div>
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.maxDeployNum.id_for_label }}">环境限制数:
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.maxDeployNum }}
+                  </div>
+                </div>
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'user_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

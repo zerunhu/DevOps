@@ -1,0 +1,31 @@
+apiVersion: v1
+data:
+  nginx.conf: "worker_processes auto;\nworker_rlimit_nofile 16384;\n\nworker_shutdown_timeout
+    10s ;\n\nload_module modules/ngx_http_opentracing_module.so;\n\ndaemon off;\n\nevents
+    {\n    worker_connections 51200;\n    use epoll;\n    multi_accept        on;\n}\n\nhttp
+    {\n\n    include       mime.types;\n    default_type  application/octet-stream;\n\n
+    \   log_format  main  '$remote_addr - $remote_user [$time_local] \"$request\"
+    '\n                  '$status $body_bytes_sent \"$http_referer\" '\n                  '\"$http_user_agent\"
+    \"$http_x_forwarded_for\"' 'by: $upstream_addr';\n\n    access_log  log/access.log
+    \ main;\n    error_log log/error.log debug;\n\n    sendfile            on;\n    tcp_nopush
+    \         on;\n    tcp_nodelay         on;\n    client_max_body_size  2000m;\n    server_names_hash_bucket_size 128;\n    keepalive_timeout   65;\n    types_hash_max_size
+    2048;\n\n    opentracing on;\n    opentracing_load_tracer /usr/local/nginx/modules/libjaegertracing_plugin.linux_amd64.so
+    /usr/local/nginx/conf/jaeger-config.json; \n    opentracing_propagate_context;\n
+    \   opentracing_operation_name $host$uri;\n    opentracing_tag request.id $request_id;\n\n
+    \   gzip  on;\n    gzip_min_length  5k;\n    gzip_buffers     4 16k;\n    gzip_comp_level
+    3;\n    gzip_types       text/plain application/x-javascript text/css application/xml
+    application/json text/javascript application/x-httpd-php image/jpeg image/gif
+    image/png;\n    gzip_vary on;\n    proxy_buffering off;    proxy_max_temp_file_size 128m;\n    \n    include /usr/local/nginx/conf.d/upstream.conf;\n\n
+    \   server {\n\n        listen 80;\n        server_name deploy-1572584856.flashhold.com;\n\n\n
+    \       location = /_ping {\n            auth_basic off;\n            root   /usr/share/nginx/html;\n
+    \           stub_status on;\n        }\n        \n        include /usr/local/nginx/conf.d/evo.conf;\n
+    \   }\n}"
+kind: ConfigMap
+metadata:
+  labels:
+    app: nginx-evo
+    chart: nginx-evo-0.2.0
+    heritage: Tiller
+    release: deploy-1572584856-nginx
+  name: deploy-1572584856-nginx-main-config
+  namespace: deploy-1572584856

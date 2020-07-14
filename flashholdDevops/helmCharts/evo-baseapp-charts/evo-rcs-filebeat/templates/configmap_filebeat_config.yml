@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config-rcs
+  labels:
+    k8s-app: filebeat
+data:
+  filebeat.yml: |-
+    filebeat.inputs:
+    - type: log
+      enabled: true
+      paths:
+        - /logdata/agv_logs/*/*.log
+        - /logdata/traffic/*.log
+      include_lines: ['datas=>']
+    - type: log
+      enabled: true
+      paths:
+        - /opt/docker/evo-rcs/logs/data_statistic/LOG_MODULE.log
+    setup.template.settings:
+      index.number_of_shards: 1
+    setup.kibana:
+    output.logstash:
+      hosts: ["logstash:5001"]
+    processors:
+      - add_host_metadata:
+      - add_cloud_metadata:

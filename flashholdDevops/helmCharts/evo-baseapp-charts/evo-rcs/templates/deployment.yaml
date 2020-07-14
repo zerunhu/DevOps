@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "demo.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "demo.name" . }}
+    helm.sh/chart: {{ include "demo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    platform: "devops"
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /actuator/prometheus
+    prometheus.io/port: "9001"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "demo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "demo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        platform: "devops"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "9001"        
+    spec:
+      initContainers:
+        - name: dependency
+          image: harbor2.flashhold.com/library/busybox:latest
+          command: ['sh', '-c', 'until nc -z {{ .Values.dependency.service }} {{ .Values.dependency.port }} ; do echo waiting for {{ .Values.dependency.service }}; sleep 2; done;']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            {{- if .Values.dynamicEnv }}
+            {{- range $key, $val := .Values.dynamicEnv }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
+            {{- end }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.env.SPRING_PROFILES_ACTIVE }}"
+            - name: db.url
+              value: "{{ .Values.env.db_url }}"
+            - name: db.username
+              value: "{{ .Values.env.db_username }}"
+            - name: db.password
+              value: "{{ .Values.env.db_password }}"
+            - name: registry
+              value: "{{ .Values.env.registry }}"
+            - name: prefer.ip
+              valueFrom:
+                configMapKeyRef:
+                  name: register-erika-config-{{ include "demo.name" . }}
+                  key: "evo-prefer-ip"
+            - name: host.ip
+            {{- if eq .Values.configMap.eureka_prefer_ip_type "master_ip" }}
+              valueFrom:
+                configMapKeyRef:
+                  name: register-erika-config-{{ include "demo.name" . }}
+                  key: "evo-rcs-ip"
+            {{- else if eq .Values.configMap.eureka_prefer_ip_type "pod_ip" }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            {{- end }}
+            - name: host.port
+              valueFrom:
+                configMapKeyRef:
+                  name: register-erika-config-{{ include "demo.name" . }}
+                  key: "evo-rcs-port"
+            - name: redis.host
+              value: "{{ .Values.env.redis_host }}"
+            - name: redis.cache.host
+              value: "{{ .Values.env.redis_host }}"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: release.name
+              value: "{{ .Values.env.release_name }}"
+            - name: rmqnamesrv
+              value: "{{ .Values.env.rmqnamesrv }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http-{{ .Values.containerPort.port1 }}
+              containerPort: {{ .Values.containerPort.port1 }}
+              protocol: TCP
+            - name: http-{{ .Values.containerPort.port2 }}
+              containerPort: {{ .Values.containerPort.port2 }}
+              protocol: TCP
+            - name: http-{{ .Values.containerPort.port3 }}
+              containerPort: {{ .Values.containerPort.port3 }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /actuator/info
+              port: 9001
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15               
+          volumeMounts:
+          - name: log
+            mountPath: /opt/evo-rcs/logs
+            {{- if .Values.persistence.subPath }}
+            subPath: {{ .Values.persistence.subPath }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: log
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "demo.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end -}}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -1,0 +1,843 @@
+{% extends "app/base_site.html" %}
+{% block title %} {{ project.name }}详情 {% endblock title %}
+
+{% block sidebar_class %}menu_fixed{% endblock sidebar_class %}
+
+{% block stylesheets %}
+    {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+    {% load guardian_tags %}
+    <div class="right_col" role="main">
+        <div class="">
+            <div class="page-title">
+                <div class="title_left">
+                    <h4>{{ project.name }}</h4>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="x_panel">
+                        <div class="x_content">
+
+                            <div>
+
+                                <br/>
+
+                                <div>
+
+                                </div>
+                                <div>
+                                    <div class="x_panel">
+
+                                        <div class="x_content">
+
+                                            <div class="" role="tabpanel" data-example-id="togglable-tabs">
+                                                <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
+                                                    <li role="presentation" class="active"><a href="#app-tab-href"
+                                                                                              id="app-tab" role="tab"
+                                                                                              data-toggle="tab"
+                                                                                              aria-expanded="true">应用</a>
+                                                    </li>
+
+                                                    {% if "项目开发经理" in role or "项目研发" in role or user.is_superuser or project.name == "evo-baseapp" %}
+                                                    <li role="presentation" class=""><a href="#env-tab-href" role="tab"
+                                                                                        id="env-tab" data-toggle="tab"
+                                                                                        aria-expanded="false">环境模板</a>
+                                                    </li>
+                                                    {% endif %}
+
+                                                    {% if "项目开发经理" in role or user.is_superuser or project.name == "evo-baseapp" %}
+                                                    <li role="presentation" class=""><a href="#branch-tab-href"
+                                                                                        role="tab" id="branch-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">分支</a>
+                                                    </li>
+                                                    {% endif %}
+
+                                                    {% if "项目开发经理" in role or "项目研发" in role or "项目产品" in role or user.is_superuser or project.name == "evo-baseapp" %}
+                                                    <li role="presentation" class=""><a href="#bstest-tab-href"
+                                                                                        role="tab" id="deploy-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">环境</a>
+                                                    </li>
+                                                    {% endif %}
+
+                                                    <li role="presentation" class=""><a href="#cmdb-tab-href"
+                                                                                        role="tab" id="cmdb-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">CMDB</a>
+                                                    </li>
+                                                    {% if "项目开发经理" in role or user.is_superuser or project.name == "evo-baseapp" %}
+                                                    <li role="presentation" class=""><a href="#user-tab-href"
+                                                                                        role="tab" id="user-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">项目用户</a>
+                                                    </li>
+                                                    {% endif %}
+
+                                                    <li role="presentation" class=""><a href="#release-tab-href"
+                                                                                        role="tab" id="release-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">系统发布</a>
+                                                    </li>
+
+                                                    <li role="presentation" class=""><a href="#releaseapp-tab-href"
+                                                                                        role="tab" id="releaseapp-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">应用发布</a>
+                                                    </li>
+                                                    <li role="presentation" class=""><a href="#yufa-tab-href"
+                                                                                        role="tab" id="yufa-tab"
+                                                                                        data-toggle="tab"
+                                                                                        aria-expanded="false">预发环境</a>
+                                                    </li>
+
+                                                </ul>
+                                                <div id="my_tab" class="tab-content">
+
+                                                    <div role="tabpanel" class="tab-pane fade active in"
+                                                         id="app-tab-href" aria-labelledby="home-tab">
+                                                        <div>
+
+                                                            <ul class="messages">
+                                                                <div class="x_panel">
+                                                                    <div class="x_title">
+
+                                                                        　{% get_obj_perms request.user for project as "project_perms" %}
+                                                                        {% if "create_app" in project_perms or user.is_superuser %}
+                                                                            <h2><p><a
+                                                                                    href="{% url 'app_add' project_id=project_id %}"
+                                                                                    class="btn btn-primary">添加应用</a></p>
+                                                                            </h2>
+                                                                        {% endif %}
+                                                                        　　　　　{% if project.name != "evo" %}
+                                                                        <h2><p><a href="#" class="btn btn-info"
+                                                                                  data-toggle="modal"
+                                                                                  data-target=".bs-base-goujian-modal-lg"
+                                                                                  onclick='base_handle_goujian();'>基线构建 </a>
+                                                                        </p></h2>
+                                                                        　{% endif %}
+                                                                        <div class="title_right">
+                                                                            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+                                                                                <form>
+                                                                                    <div class="input-group">
+                                                                                        <input type="hidden"
+                                                                                               name="object"
+                                                                                               value="app"/>
+                                                                                        <input id=search name="keyword"
+                                                                                               type="text"
+                                                                                               class="form-control"
+                                                                                               placeholder="Search for..."
+                                                                                               　/>
+                                                                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="submit">Go!</button>
+                                          </span>
+                                                                                    </div>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="clearfix"></div>
+                                                                    </div>
+                                                                    <div class="x_content">
+                                                                        <table class="table table-striped projects">
+                                                                            <thead>
+                                                                            <tr>
+
+                                                                                <th style="width: 10%">名称</th>
+                                                                                <th style="width: 10%">别名</th>
+                                                                                {#                                    <th style="width: 10%">版本</th>#}
+                                                                                {#                                    <th style="width: 10%">负责人</th>#}
+                                                                                {#                                    <th style="width: 10%">成员</th>#}
+                                                                                <th style="width: 10%">操作</th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                            {% for app in apps %}
+                                                                                <tr>
+
+                                                                                    <td><a>{{ app.name }}</a></td>
+                                                                                    <td>{{ app.slugName }}</td>
+                                                                                    {#                                          <td>{{ app.version }}</td>#}
+                                                                                    {#                                          <td>{{ app.admin }}</td>#}
+                                                                                    {#                                          <td>{{ app.members }}</td>#}
+                                                                                    <td>
+                                                                                        {#                                          <a href="{% url 'app_detail' pk=app.id %}" class="btn btn-primary btn-xs"><i class="fa fa-folder"></i> 详情 </a>#}
+                                                                                        {#                              <a href="{% url 'app_update' pk=app.id %}" class="btn btn-primary btn-xs"><i class="fa fa-pencil"></i> 编辑 </a>#}
+                                                                                        {#                                          {% get_obj_perms request.user for project as "project_perms" %}#}
+                                                                                        {#                                                {% if "delete_app" in project_perms or user.is_superuser %}#}
+                                                                                        {#                                                    <a href="{% url 'app_delete' pk=app.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 删除 </a>#}
+                                                                                        {#                                                {% endif %}#}
+                                                                                        <a href="{{ gitlab_url }}software/{{ app.slugName }}"
+                                                                                           class="btn btn-success btn-xs"
+                                                                                           target="_blank"> 代码仓库 </a>
+                                                                                        <a href="#"
+                                                                                           class="btn btn-primary btn-xs"
+                                                                                           data-toggle="modal"
+                                                                                           data-target=".bs-goujian-modal-lg"
+                                                                                           onclick='handle_goujian("{{ project.id }}","{{ app.id }}");'>构建 </a>
+                                                                                        {#                                                    <a href="#" class="btn btn-primary btn-xs" target="_blank"> 应用依赖提示 </a>#}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                            </tbody>
+                                                                        </table>
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div role="tabpanel" class="tab-pane fade" id="env-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/environmentTemplatesList?projectId={{project_id}}&userId={{requestUser_id}}" style="width:100%;height:800px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+
+                                                    <div role="tabpanel" class="tab-pane fade" id="branch-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <div>
+                                                            <ul class="messages">
+                                                                <div class="x_panel">
+                                                                    <div class="x_title">
+                                                                        <h2><p><a
+                                                                                href='{% url 'branch_add_feature'  project_id=project_id %}'
+                                                                                class="btn btn-primary">创建feature分支</a>
+                                                                        </p></h2>
+                                                                        　{% if project.name == "evo" %}
+                                                                        <h2><p><a
+                                                                                href='{% url 'branch_add_release'  project_id=project_id %}'
+                                                                                class="btn btn-success">创建外部release分支</a>
+                                                                        </p></h2>
+                                                                        　　　{% endif %}
+                                                                        {#                                   {% get_obj_perms request.user for project as "project_perms" %}#}
+                                                                        {#                                    {% if "create_release_branch" in project_perms  or user.is_superuser %}#}
+                                                                        {#                                        {% if project.name == "evo" %}#}
+                                                                        {#                                            <h2><p><a href='{% url 'branch_add_release' project_id=project_id %}' class="btn btn-success">创建release分支</a></p></h2>#}
+                                                                        {#                                        {% endif %}#}
+                                                                        <h2><p><a
+                                                                                href='{% url 'branch_add_tag' project_id=project_id %}'
+                                                                                class="btn btn-danger">创建标签</a></p></h2>
+                                                                        {#                                    {% endif %}#}
+                                                                        <h2><p><a
+                                                                                href='{% url 'branch_add_hotfix' project_id=project_id %}'
+                                                                                class="btn btn-warning">创建hotfix分支</a>
+                                                                        </p></h2>
+                                                                        {#                                    <div class="title_right">#}
+                                                                        {#                                      <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">#}
+                                                                        {#                                      <form >#}
+                                                                        {#                                        <div class="input-group">#}
+                                                                        {#                                            <input type="hidden" name="object" value="branch" />#}
+                                                                        {#                                          <input id=search name="keyword" type="text" class="form-control" placeholder="Search for..."　/>#}
+                                                                        {#                                          <span class="input-group-btn">#}
+                                                                        {#                                            <button class="btn btn-default" type="submit">Go!</button>#}
+                                                                        {#                                          </span>#}
+                                                                        {#                                        </div>#}
+                                                                        {#                                      </form>#}
+                                                                        {#                                      </div>#}
+                                                                        {#                                    </div>#}
+                                                                        <div class="clearfix"></div>
+                                                                    </div>
+                                                                    <div class="x_content">
+                                                                        <table class="table table-striped projects">
+                                                                            <thead>
+                                                                            <tr>
+                                                                                <th style="width: 1%">#</th>
+                                                                                <th style="width: 20%">分支名</th>
+                                                                                　
+                                                                                <th style="width: 20%">分支类型</th>
+                                                                                <th style="width: 20%">分支描述</th>
+                                                                                　
+                                                                                <th>应用</th>
+                                                                                <th style="width: 20%">操作</th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                            {% for branch in branchs %}
+                                                                                <tr>
+                                                                                    <td>#</td>
+                                                                                    <td>{{ branch.name }}</td>
+                                                                                    <td>{{ branch.type }}</td>
+                                                                                    <td>{{ branch.desc }}</td>
+                                                                                    {% if branch.singleApp is not None %}
+                                                                                        <td>{{ branch.singleApp }}</td>
+                                                                                    {% else %}
+                                                                                        <td>项目feature</td>
+                                                                                    {% endif %}
+                                                                                    <td>
+                                                                                        {#                                                {% if branch.singleApp is not None %}#}
+                                                                                        {#                                                    <a href="{% url 'branch_trigger' pk=branch.id %}" class="btn btn-success btn-xs"></i> trigger CI </a>#}
+                                                                                        {#                                                {% endif %}#}
+                                                                                        {% get_obj_perms request.user for branch as "branch_perms" %}
+                                                                                        {% if "delete_feature_branch" in branch_perms  or user.is_superuser %}
+                                                                                            <a href="{% url 'branch_delete' pk=branch.id project_id=project_id %}"
+                                                                                               class="btn btn-danger btn-xs"><i
+                                                                                                    class="fa fa-trash-o"></i>
+                                                                                                删除 </a>
+                                                                                        {% endif %}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                            </tbody>
+                                                                        </table>
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div role="tabpanel" class="tab-pane fade" id="deploy-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <div>
+                                                            <ul class="messages">
+                                                                <div class="x_panel">
+                                                                    <div class="x_title">
+                                                                        <p>
+                                                                            <a href="/deploy/add/{{ project_id }}"
+                                                                               class="btn btn-success"><i
+                                                                                    class="fa fa-folder"></i> 部署 </a>
+                                                                            <a href="#" onclick="my_deploy()"
+                                                                               class="btn btn-success"><i
+                                                                                    ></i> 我的环境 </a>
+                                                                            {#                  <a href="http://192.168.25.74:3000/wetty/ssh/frylion" target="_blank" class="btn btn-primary" onclick='handle();'><i class="fa fa-folder"></i> 终端 </a>#}
+                                                                        </p>
+                                                                        <div class="clearfix"></div>
+                                                                    </div>
+                                                                    <div class="x_content">
+                                                                        <table class="table table-striped projects">
+                                                                            <thead>
+                                                                            <tr>
+                                                                                <th style="width: 1%">#</th>
+                                                                                <th style="width: 15%">环境名</th>
+                                                                                <th style="width: 15%">域名</th>
+                                                                                <th style="width: 15%">环境描述</th>
+                                                                                <th style="width: 10%">内存</th>
+                                                                                <th style="width: 10%">CPU</th>
+                                                                                <th style="width: 12%">创建人</th>
+                                                                                <th style="width: 15%">操作</th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody id="deploy_tbody">
+                                                                            {% for deploy in deploys %}
+                                                                                <tr>
+                                                                                    <td>#</td>
+                                                                                    　
+                                                                                    <td>{{ deploy.envName }}</td>
+                                                                                    <td>{{ deploy.envName }}.flashhold.com</td>
+                                                                                    <td>{{ deploy.envDesc }}</td>
+                                                                                    <td id="{{ deploy.envName }}-memory">
+                                                                                        Loading...
+                                                                                    </td>
+                                                                                    <td id="{{ deploy.envName }}-cpu">
+                                                                                        Loading...
+                                                                                    </td class="userName">
+                                                                                    <td>{{ deploy.user_name }}</td>
+
+                                                                                    <td>
+                                                                                        {#                      <a href="#" class="btn btn-primary btn-xs"   data-toggle="modal" data-target=".log-modal-lg" onclick='handle_log("{{ deploy.id }}");'><i class="fa fa-folder"></i> 部署日志 </a>#}
+                                                                                        <a href="{% url 'deploy_detail' pk=deploy.id %}"
+                                                                                           class="btn btn-success btn-xs">详情</a>
+                                                                                        <a href="{% url 'deploy_delete' pk=deploy.id %}"
+                                                                                           class="btn btn-danger btn-xs">删除</a>
+                                                                                        　<a href="#"
+                                                                                            class="btn btn-info btn-xs"
+                                                                                            data-toggle="modal"
+                                                                                            data-target=".bs-package-modal-lg"
+                                                                                            onclick='handle_deploy("{{ deploy.id }}")'>打包</a>
+
+                                                                                    </td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                            </tbody>
+                                                                        </table>
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div role="tabpanel" class="tab-pane fade" id="cmdb-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/cmdbBaseInfo?projectNo={{project_name}}&userId={{requestUser_id}}" style="width:100%;height:830px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+
+                                                    <div role="tabpanel" class="tab-pane fade" id="release-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/releaseList?projectNo={{project_name}}&userId={{requestUser_id}}" style="width:100%;height:900px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+
+                                                    <div role="tabpanel" class="tab-pane fade" id="releaseapp-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/releaseappSumList?projectNo={{project_name}}&userId={{requestUser_id}}" style="width:100%;height:900px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+                                                    <div role="tabpanel" class="tab-pane fade" id="yufa-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/predeployList?projectNo={{project_name}}&userId={{requestUser_id}}" style="width:100%;height:900px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+                                                    <div role="tabpanel" class="tab-pane fade" id="bstest-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <iframe src="http://{{ QAAS_CMDB }}/#/deployList?projectId={{project_id}}&userId={{requestUser_id}}" style="width:100%;height:900px" frameborder="0" border="0" scrolling="yes" ></iframe>
+                                                    </div>
+
+                                                    <div role="tabpanel" class="tab-pane fade" id="user-tab-href"
+                                                         aria-labelledby="profile-tab">
+                                                        <div>
+                                                            <ul class="messages">
+                                                                <div class="x_panel">
+                                                                    <div class="x_title">
+<!--                                                                        <p>-->
+<!--                                                                            <a href="/projectUser/add/{{ project_id }}"-->
+<!--                                                                               class="btn btn-success"><i-->
+<!--                                                                                    class="fa fa-folder"></i> 添加用户 </a>-->
+
+<!--                                                                        </p>-->
+                                                                        <div class="clearfix"></div>
+                                                                    </div>
+                                                                    <div class="x_content">
+                                                                        <table class="table table-striped projects">
+                                                                            <thead>
+                                                                            <tr>
+                                                                                <th style="width: 5%">#</th>
+                                                                                <th style="width: 20%">角色名</th>
+										                                        <th style="width: 20%">项目名</th>
+                                                                                 <th style="width: 35%">权限</th>
+                                                                                <th style="width: 20%">操作</th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                            {% for roles in roles %}
+                                                                                <tr>
+                                                                                    <td>#</td>　
+                                                                                    <td>{{ roles.name }}</td>
+                                                                                    <td>{{ roles.project_name }}</td>
+
+                                                                                    {% if roles.name == "项目开发经理" %}
+                                                                                    <td>
+                                                                                        <p>系统发布-查询、查看应用</p>
+                                                                                        <p>应用发布-查询、查看应用</p>
+                                                                                        <p>应用发布-发布新建</p>
+                                                                                        <p>应用发布-编辑/发布</p>
+                                                                                        <p>CMDB-查看</p>
+                                                                                        <p>分支/环境</p>
+                                                                                        <p>项目用户</p>
+                                                                                        <p>环境模板</p>
+                                                                                    </td>
+                                                                                    {% endif %}
+
+                                                                                    {% if roles.name == "项目研发" %}
+                                                                                    <td>
+                                                                                        <p>系统发布-查询、查看应用</p>
+                                                                                        <p>应用发布-查询、查看应用</p>
+                                                                                        <p>CMDB-查看</p>
+                                                                                        <p>环境摸板</p>
+                                                                                        <p>环境</p>
+                                                                                    </td>
+                                                                                    {% endif %}
+
+                                                                                    {% if roles.name == "项目产品" %}
+                                                                                    <td>
+                                                                                        <p>系统发布-查询、查看应用</p>
+                                                                                        <p>应用发布-查询、查看应用</p>
+                                                                                        <p>系统发布-新建</p>
+                                                                                        <p>系统发布-编辑/发布</p>
+                                                                                        <p>CMDB-查看</p>
+                                                                                        <p>环境</p>
+                                                                                    </td>
+                                                                                    {% endif %}
+
+                                                                                    <td>
+
+                                                                                        <a href="{% url 'role_user_list' pk=roles.id%}"
+                                                                                           class="btn btn-primary btn-xs">添加用户</a>
+
+                                                                                    </td>
+                                                                                </tr>
+                                                                            {% endfor %}
+                                                                            </tbody>
+                                                                        </table>
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                            <!-- start project-detail sidebar -->
+                            <!-- end project-detail sidebar -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade bs-goujian-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">选择分支</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="item form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">选择分支<span
+                                    class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input type="hidden" name="app_id" value=""/>
+                                <select id="goujian_selected">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="goujian_send" class="btn btn-primary">提交</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="modal fade bs-base-goujian-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">选择基线应用</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        　
+                        <div class="item form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">选择基线应用<span
+                                    class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input type="hidden" name="app_id" value=""/>
+                                <select id="base_app_goujian_selected">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 20px">
+                        <div class="item form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">选择分支<span
+                                    class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <input type="hidden" name="app_id" value=""/>
+                                <select id="base_branch_goujian_selected">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="base_goujian_send" class="btn btn-primary">提交</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    <div class="modal fade log-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form action="{% url 'group_add_users' %}" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">日志</h4>
+                    </div>
+
+                    <div class="modal-body">
+          <pre>
+          <div id="deploy_log"> </div>
+          </pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                        <input type="submit" class="btn btn-primary" value="提交"/>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="modal fade bs-package-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">打包确认</h4>
+                </div>
+                <div class="modal-body">
+                    {#          <div class="row">#}
+                    {#            <div class="item form-group">#}
+                    {#              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">包名<span class="required">*</span>#}
+                    {#              </label>#}
+                    {#              <div class="col-md-6 col-sm-6 col-xs-12">#}
+                    {#                  <input name="package_name" value="" />#}
+                    {#              </div>#}
+                    {#            </div>#}
+                    {#          </div>#}
+                    <div class="row" style="padding-top: 5px">
+                        <div class="item form-group">
+                            {#              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.slugName.id_for_label }}">版本<span class="required">*</span>#}
+                            {#              </label>#}
+                            <input type="hidden" name="deploy_id" ,value=""/>
+                            {#              <div class="col-md-6 col-sm-6 col-xs-12">#}
+                            {#                  <input name="version" value="" />#}
+                            {#              </div>#}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    　
+                    <button id="package_send" data-loading-text="Loading..." class="btn btn-primary">提交</button>
+                    {#        <button id="package_send" class="btn btn-primary" >提交</button>#}
+                </div>
+            </form>
+        </div>
+
+    </div>
+{% endblock content %}
+
+{% block javascripts %}
+    {{ block.super }}
+    <!-- ECharts -->
+
+
+    <script type="text/javascript">
+
+
+        function my_deploy(){
+            $.ajax({
+                async:false,
+                url: "{% url 'my_deploy' %}",
+                data: {"namespace": "{{ deploy.envName }}"},
+                type: "post",
+                dataType:'json',
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("错误信息: " + XMLHttpRequest.responseText);
+                    sleep(1000); //当前方法暂停1秒
+                    location.reload();
+                    },
+                success:function(result){
+                       var deploy = $("#deploy_tbody")
+                       var deploytd = deploy.children()
+                       for (var i=0;i<deploytd.length;i++){
+                           if(deploytd[i].innerText.indexOf(result) == -1){
+                               deploytd[i].remove()
+                           }else{
+                               console.log("cunzai")
+                           }
+                       }
+                    }
+            });
+        }
+
+        function handle_log(deploy_id) {
+            $.ajax({
+                async: false,
+                url: "{% url 'get_deploy_log' %}",
+                data: {"deploy_id": deploy_id},
+                type: "get",
+                {#dataType:'json',#}
+                success: function (result) {
+
+                    $("#deploy_log").html(result)
+                }
+            });
+        }
+
+        function handle_deploy(deploy_id) {
+            $("input[name='deploy_id']").val(deploy_id);
+        }
+
+        $("#package_send").click(function (e) {
+            $(this).button("loading");
+            e.preventDefault();
+            {#var package_name = $("input[name='package_name']").val();#}
+            {#var version = $("input[name='version']").val();#}
+            $.ajax({
+                async: true,
+                url: "{% url 'package_deploy' %}",
+                timeout: 10 * 60 * 1000, //超时时间设置，单位毫秒
+                {#data: {'package_name':package_name,'version':version,"deploy_id":$("input[name='deploy_id']").val()},#}
+                data: {"deploy_id": $("input[name='deploy_id']").val()},
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    alert("打包成功，请联系devops下载包")
+                    location.reload()
+                },
+                error: function (request, status, error) {
+                    alert("接口请求出错，请联系devops查看打包日志");
+                    {#alert(request.responseText);#}
+                    location.reload()
+                },
+                complete: function (XMLHttpRequest, status) { //请求完成后最终执行参数
+                    if (status == 'timeout') {          //超时,status还有success,error等值的情况
+                        alert("接口请求超时，请联系devops查看打包日志");
+                        location.reload()
+                    }
+                }
+
+            });
+        });
+
+        function handle_goujian(project_id, app_id) {
+            $.ajax({
+                async: false,
+                url: "{% url 'get_project_branch' %}",
+                data: {"project_id": project_id, "app_id": app_id},
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    var text = "";
+                    result.forEach(function (v, i) {
+                        text = text + '<option value ="' + v.branch_id + '">' + v.branch_name + '</option>';
+                    });
+                    $("#goujian_selected").html(text); //.chosen({width: "50%"})
+                }
+            });
+            $("input[name='app_id']").val(app_id);
+            $("#goujian_selected").click();
+        }
+
+        function base_handle_goujian() {
+            $.ajax({
+                async: false,
+                url: "{% url 'get_evo_apps' %}",
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    var text = "";
+                    result.forEach(function (v, i) {
+                        text = text + '<option value ="' + v.app_id + '">' + v.app_name + '</option>';
+                    });
+                    $("#base_app_goujian_selected").html(text).chosen({width: "50%"});
+                }
+            });
+            $("#base_app_goujian_selected").click();
+        }
+
+        $("#goujian_send").click(function (e) {
+            e.preventDefault();
+            var goujian_id = $("#goujian_selected").val();
+            $.ajax({
+                async: false,
+                url: "/branch_trigger/" + goujian_id,
+                data: {'app_id': $("input[name='app_id']").val()},
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    window.open(result.url);
+                    location.reload()
+                }
+
+            });
+        });
+        $("#base_goujian_send").click(function (e) {
+            e.preventDefault();
+            var app_id = $("#base_app_goujian_selected").val();
+            var branch_id = $("#base_branch_goujian_selected").val();
+            $.ajax({
+                async: false,
+                url: "/branch_trigger/" + branch_id,
+                data: {'app_id': app_id},
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    window.open(result.url);
+                    location.reload()
+                }
+
+            });
+        });
+        $(function () {
+            $("#base_app_goujian_selected").on("click", function () {
+                $.ajax({
+                    async: false,
+                    url: "{% url 'get_project_branch' %}",
+                    data: {'app_id': $("#base_app_goujian_selected").val()},
+                    type: "post",
+                    dataType: 'json',
+                    success: function (result) {
+                        var text = "";
+                        result.forEach(function (v, i) {
+                            text = text + '<option value ="' + v.branch_id + '">' + v.branch_name + '</option>';
+                        });
+                        $("#base_branch_goujian_selected").html(text).chosen({width: "50%"});
+                    }
+                });
+                $("#base_branch_goujian_selected").click();
+            })
+            $.ajax({
+                async: true,
+                url: "{% url 'get_project_monitor_resource' %}",
+                data: {'project_id': "{{ project_id }}"},
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    console.log(result)
+                    $.each(result, function (k, v) {
+                        $.each(v, function (k1, v1) {
+                            if (k1 == "memory") {
+                                if (v1) {
+                                    $("#" + k + "-memory").html(v1)
+                                } else {
+                                    $("#" + k + "-memory").html("无")
+                                }
+
+                            } else {
+                                if (v1) {
+                                    $("#" + k + "-cpu").html(v1)
+                                } else {
+                                    $("#" + k + "-cpu").html("无")
+                                }
+                            }
+                        })
+                    })
+                }
+            });
+            if (sessionStorage.getItem('ptab')) {
+                var tab = sessionStorage.getItem('ptab');
+                $("#" + tab).tab('show')
+            }
+            $('#myTab a').click(function (e) {
+                e.preventDefault()
+                sessionStorage.setItem("ptab", this.id);
+                $(this).tab('show')
+            })
+        })
+    </script>
+    {#  <script src="/static/vendors/echarts/dist/echarts.min.js"></script>#}
+{% endblock javascripts %}

@@ -1,0 +1,175 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+        {% if type == "release" %}
+            <h3>release分支</h3>
+        {% elif type == "feature" %}
+            <h3>feature分支</h3>
+        {% elif type == "hotfix" %}
+            <h3>hotfix分支</h3>
+        {% elif type == "tag" %}
+            <h3>标签</h3>
+        {% endif %}
+        </div>
+      </div>
+      <div class="clearfix"></div>
+          {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">x</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" >{% csrf_token %}
+                    {% if type == "release" %}
+                        <span class="section">新建外部项目release分支</span>
+                    {% elif type == "feature" %}
+                        <span class="section">新建feature分支</span>
+                    {% elif type == "hotfix" %}
+                        <span class="section">新建hotfix分支</span>
+                    {% elif type == "tag" %}
+                        <span class="section">新建标签</span>
+                    {% endif %}
+                    {% if type == "tag" %}
+                        <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.desc.id_for_label }}">标签名<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.desc }}{{ form.desc.errors }}
+                          </div>
+                        </div>
+                    {% endif %}
+                    {% if type == "release" %}
+                        <div class="item form-group">
+                              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.desc.id_for_label }}">外部项目名（例：Axxxxx）<span class="required">*</span>
+                              </label>
+                              <div class="col-md-6 col-sm-6 col-xs-12">
+                                  {{ form.desc }}{{ form.desc.errors }}
+                              </div>
+                        </div>
+                    {% elif type == "feature" %}
+                         <div class="item form-group">
+                              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.desc.id_for_label }}">分支简称<span class="required">*</span>
+                              </label>
+                              <div class="col-md-6 col-sm-6 col-xs-12">
+                                  {{ form.desc }}{{ form.desc.errors }}
+                              </div>（分支名不允许有空格）
+                        </div>
+                    {% elif type == "hotfix" %}
+                        <div class="item form-group">
+                              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.desc.id_for_label }}">hotfix描述<span class="required">*</span>
+                              </label>
+                              <div class="col-md-6 col-sm-6 col-xs-12">
+                                  {{ form.desc }}{{ form.desc.errors }}
+                              </div>（分支名不允许有空格）
+                        </div>
+                    {% endif %}
+                    <div id="singleApp">
+                        <div class="item form-group">
+                              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.singleApp.id_for_label }}">{{ form.singleApp.label_tag }}
+                              </label>
+                              <div class="col-md-6 col-sm-6 col-xs-12">
+                                  {{ form.singleApp }}{{ form.singleApp.errors }}
+                              </div>
+                        </div>
+                    </div>
+                    {% if type == "hotfix" %}
+                        <div>
+                         <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">基于<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              <select id="baseBranch"></select>
+                          </div>
+                        </div>
+                        </div>
+                    {% else %}
+                        <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.baseBranch.id_for_label }}">基于<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.baseBranch }}{{ form.baseBranch.errors }}
+                          </div>
+                        </div>
+                    {% endif %}
+                    <div class="item form-group">
+
+                      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.project.id_for_label }}">{{ form.project.label_tag }}<span class="required">*</span>
+                      </label>
+                      <div class="col-md-6 col-sm-6 col-xs-12">
+                          {{ form.project }}{{ form.project.errors }}
+                      </div>
+                    </div>
+                    <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.projectFlag.id_for_label }}">{{ form.projectFlag.label_tag }}
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.projectFlag }}{{ form.projectFlag.errors }}
+                          </div>
+                    </div>
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'project_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+    <script type="text/javascript">
+    $(function () {
+        {% if type == "hotfix" %}
+            $("#id_singleApp").change(function () {
+                $.ajax({
+                async:false,
+                url: "{% url 'get_app_tag' %}",
+                data: {"app_id": $(this).val() },
+                type: "get",
+                {#dataType:'json',#}
+                success:function(result){
+                        var text = "";
+                        result.forEach(function (v,i) {
+                            text = text + '<option value ="'+v+'">'+v+'</option>';
+                        });
+                        $("#baseBranch").html(text).chosen({width: "50%"});
+                    }
+                });
+            })
+        {% endif %}
+        $("input[name='projectFlag']").click(function () {
+            if ($(this).prop("checked")){
+                $("#singleApp").hide();
+            }else{
+                $("#singleApp").show();
+            }
+        })
+
+     $("#id_baseBranch").chosen();
+     $("#id_singleApp").chosen();
+    })
+    </script>
+
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

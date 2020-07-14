@@ -1,0 +1,82 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: prometheus
+  labels:
+    app: {{ template "prometheus.fullname" . }}
+    chart: {{ template "prometheus.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    platform: "devops"
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "prometheus.fullname" . }}
+      release: {{ .Release.Name }}
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "prometheus.fullname" . }}
+        release: {{ .Release.Name }}
+        platform: "devops"
+      annotations:
+        checksum/config: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+    {{- if .Values.image.pullSecrets }}
+      {{- range $pullSecret := .Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ $pullSecret }}
+      {{- end }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: {{ .Values.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: {{ .Values.service.internalPort }}
+          volumeMounts:
+#            {{- if  .Values.logPersistence.enabled }}
+#            - mountPath: /usr/local/nginx/log
+#              name: nginx-log
+#            {{- end }}
+            - mountPath: /etc/prometheus/prometheus.yml
+              name: {{ .Release.Name }}-main-config
+              subPath: prometheus.yml
+              #subPath: evo-nginx-main-config
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+#        {{- if  .Values.logPersistence.enabled }}
+#        - name: nginx-log
+#          persistentVolumeClaim:
+#            claimName: {{ template "prometheus.fullname" . }}-log
+#        {{- end }}
+        - name: {{ .Release.Name }}-main-config
+          configMap:
+            name: {{ .Release.Name }}-main-config
+    {{- range $file := .Values.configMap }}
+        - name: {{ $file }}
+          configMap:
+            name: {{ $file }}
+    {{- end }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

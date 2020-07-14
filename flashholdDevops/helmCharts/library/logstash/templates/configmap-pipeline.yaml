@@ -1,0 +1,125 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "logstash.fullname" . }}-pipeline
+  labels:
+    app: "{{ template "logstash.fullname" . }}"
+    chart: "{{ .Chart.Name }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+  logstash.conf: |-
+    # Sample Logstash configuration for creating a simple
+    # Beats -> Logstash -> Elasticsearch pipeline.
+
+    input {
+      beats {
+        port => 5001
+      }
+    jdbc {
+        jdbc_driver_library => "/usr/share/logstash/config/mysql-connector-java-8.0.11.jar"
+        jdbc_driver_class => "com.mysql.cj.jdbc.Driver"
+        jdbc_connection_string => "jdbc:mysql://172.31.125.80:3306/evo_basic?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
+        jdbc_user => "root"
+        jdbc_password => "root123"
+        schedule => "59 * * * *"
+        statement => "select s.*,  w.warehouse_code,w.warehouse_name from basic_station s ,basic_warehouse w WHERE s.warehouse_id=w.id"
+        type => "station"
+        }
+     jdbc {
+        jdbc_driver_library => "/usr/share/logstash/config/mysql-connector-java-8.0.11.jar"
+        jdbc_driver_class => "com.mysql.cj.jdbc.Driver"
+        jdbc_connection_string => "jdbc:mysql://172.31.125.80:3306/evo_basic?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
+        jdbc_user => "root"
+        jdbc_password => "root123"
+        schedule => "59 * * * *"
+        statement => "select c.*,  w.warehouse_code,w.warehouse_name from basic_charger c,basic_warehouse w WHERE c.warehouse_id=w.id"
+        type => "charger"
+        }
+     jdbc {
+        jdbc_driver_library => "/usr/share/logstash/config/mysql-connector-java-8.0.11.jar"
+        jdbc_driver_class => "com.mysql.cj.jdbc.Driver"
+        jdbc_connection_string => "jdbc:mysql://172.31.125.80:3306/evo_basic?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=UTF-8"
+        jdbc_user => "root"
+        jdbc_password => "root123"
+        schedule => "59 * * * *"
+        statement => "SELECT a.* ,b.warehouse_code,b.warehouse_name,t.agv_type_code from basic_agv a,basic_warehouse b,basic_agv_type t  where a.warehouse_id=b.id and a.agv_type_id=t.id"
+        type => "agv"
+        }
+    }
+
+    filter {
+      ruby {
+        path => "/usr/share/logstash/config/parse_json_records.rb"
+      }
+    }
+
+    output {
+        stdout {}
+        if [_db_data_type] == "agv_working_status" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_working_status(agvId,time,workingStatus,onlineStatus,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,'1','#warehousecode#','#warehousename#')", "agvId","time","workingStatus","onlineStatus"]
+          }
+        } else if [_db_data_type] == "agv_breakdown_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_breakdown_record(time,agvId,breakdownId,errorCodes,x,y,speed,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,?,?,'1','#warehousecode#','#warehousename#')", "time","agvId","breakdownId","errorCodes","x","y","speed"]
+          }
+        } else if [_db_data_type] == "agv_mileage_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_mileage_record(time,agvId,loadMileage,noLoadMileage,overAllMileage,liftTimes,batteryCycleTimes,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,?,?,'1','#warehousecode#','#warehousename#')", "time","agvId","loadMileage","noLoadMileage","overAllMileage","liftTimes","batteryCycleTimes"]
+          }
+        } else if [_db_data_type] == "agv_error_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_error_record(time,agvId,breakdownId,errorCode,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,'1','#warehousecode#','#warehousename#')", "time","agvId","breakdownId","errorCode"]
+          }
+        } else if [_db_data_type] == "agv_lockzone_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_lockzone_record(agvId,time,x,y,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,'1','#warehousecode#','#warehousename#')", "agvId","time","x","y"]
+          }
+        } else if [_db_data_type] == "agv_plan_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_plan_record(agvId,time,x,y,isReplan,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,'1','#warehousecode#','#warehousename#')", "agvId","time","x","y","isReplan"]
+          }
+        } else if [_db_data_type] == "agv_power_record" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO agv_power_record(agvId,time,power,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,'1','#warehousecode#','#warehousename#')", "agvId","time","power"]
+          }
+        } else if [_db_data_type] == "BUCKET_SELECT" {
+          jdbc {
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO bucket_select(bucketId,time,bucketXAxis,bucketYAxis,jobType,warehouse_id,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,'1','#warehousecode#','#warehousename#')", "bucketId","time","bucketXAxis","bucketYAxis","jobType"]
+          }
+        }  else if [type] == "station"{
+          jdbc{
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO basic_station(id,warehouse_id,station_code,station_name,zone_id,station_type,enabled,map_code_and_version,state,remark,created_time,created_user,created_app,last_updated_time,last_updated_user,last_updated_app,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", "id","warehouse_id","station_code","station_name","zone_id","station_type","enabled","map_code_and_version","state","remark","created_time","created_user","created_app","last_updated_time","last_updated_user","last_updated_app","warehouse_code","warehouse_name"]
+         }
+        } else if [type] == "charger"{
+          jdbc{
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO basic_charger(id,warehouse_id,charger_code,charger_port_type,charger_mode,charger_type,enabled,map_code_and_version,state,created_time,created_user,created_app,last_updated_time,last_updated_user,last_updated_app,warehouse_code,warehouse_name) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", "id","warehouse_id","charger_code","charger_port_type","charger_mode","charger_type","enabled","map_code_and_version","state","created_time","created_user","created_app","last_updated_time","last_updated_user","last_updated_app","warehouse_code","warehouse_name"]
+         }
+        } else if [type] == "agv"{
+          jdbc{
+            connection_string => "jdbc:mysql://lanpi-rds.quicktron.com.cn:3306/evo_wds_base?user=quicktron&password=kc87654321!&useUnicode=true&characterEncoding=UTF8"
+            statement => ["INSERT INTO basic_agv(id,agv_code,warehouse_id,zone_id,operation_scope_id,agv_type_id,agv_appearance_id,agv_frame_code,drive_unit_version,ip,dsp_version,battery_version,radar_version,camera_version,os,state,created_time,created_user,created_app,last_updated_time,last_updated_user,last_updated_app,warehouse_code,warehouse_name,agv_type_code) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", "id","agv_code","warehouse_id","zone_id","operation_scope_id","agv_type_id","agv_appearance_id","agv_frame_code","drive_unit_version","ip","dsp_version","battery_version","radar_version","camera_version","os","state","created_time","created_user","created_app","last_updated_time","last_updated_user","last_updated_app","warehouse_code","warehouse_name","agv_type_code"]
+         }
+      }else {
+        mongodb {
+        collection => "%{_db_data_type}"
+        generateId => "true"
+        database => "evo-rcs"
+        uri => "mongodb://mongodb:27017"
+      }
+    }
+    }
+
+

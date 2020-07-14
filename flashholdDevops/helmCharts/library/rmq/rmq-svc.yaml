@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    helm.sh/chart: rmq-0.6.1
+  labels:
+    app.kubernetes.io/instance: deploy-1577265051-rmq
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: rmq
+    helm.sh/chart: rmq-0.6.1
+  name: rmq
+  namespace: deploy-1577265051
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - name: http-8080
+    nodePort: 30021
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: http-9876
+    nodePort: 30500
+    port: 9876
+    protocol: TCP
+    targetPort: 9876
+  - name: http-10911
+    port: 10911
+    protocol: TCP
+    targetPort: 10911
+  selector:
+    app.kubernetes.io/instance: deploy-1577265051-rmq
+    app.kubernetes.io/name: rmq
+  sessionAffinity: None
+  type: NodePort

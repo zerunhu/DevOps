@@ -1,0 +1,69 @@
+# Default values for nginx-ldapauth-proxy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+image:
+  repository: harbor2.flashhold.com/library/nginx
+  tag: jaeger0.4.6
+  pullPolicy: IfNotPresent
+  # pullSecrets:
+   # - docker-secret
+service:
+  name: nginx-evo
+  type: ClusterIP
+  internalPort: 80
+  externalPort: 80
+
+server:
+  Port: 80
+  Host: deploy-1584694223.flashhold.com
+
+ingress:
+  enabled: true
+  # Used to create an Ingress record.
+  hosts:
+    - deploy-1584694223.flashhold.com
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 128m
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  tls:
+    # Secrets must be manually created in the namespace.
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+
+configMap:
+    - evo
+    - upstream
+
+logPersistence:
+  enabled: false
+  storageClass: "nfs-client"
+  size: 10Gi
+  accessMode: ReadWriteOnce
+  annotations: {}
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+secrets:
+  ldapBindPassword:
+    enabled: false
+
+nodeSelector: 
+  hosttype: node
+
+
+tolerations: {}
+
+affinity: {}

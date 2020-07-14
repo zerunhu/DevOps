@@ -1,0 +1,58 @@
+# Default values for demo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: harbor2.flashhold.com/evo-baseapp/evo-rcs-log
+  tag: 2.2.0-20052503
+  pullPolicy: IfNotPresent
+
+env:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  mongodb_host: "mongodb"
+  release_name: "evo-rcs-log"
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort:
+  port1: 1234
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 1
+    memory: 1024Mi
+  requests:
+    cpu: 0.5
+    memory: 1024Mi
+
+
+tolerations: []
+
+affinity: {}
+
+service:
+  type: NodePort
+  name: evo-rcs-log
+persistence:
+  enabled: false
+  storageClass: "nfs-client"
+  accessMode: ReadWriteOnce
+  size: 2Gi
+nodeSelector:
+  hosttype: node

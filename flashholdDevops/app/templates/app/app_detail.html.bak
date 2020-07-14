@@ -1,0 +1,235 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} {{ app.name }}{% endblock title %}
+
+{% block sidebar_class %}menu_fixed{% endblock sidebar_class %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>{{ app.name }}</h3>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+            <div class="x_title">
+              <ul class="nav navbar-right panel_toolbox">
+                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="#">Settings 1</a>
+                    </li>
+                    <li><a href="#">Settings 2</a>
+                    </li>
+                  </ul>
+                </li>
+                <li><a class="close-link"><i class="fa fa-close"></i></a>
+                </li>
+              </ul>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="x_content">
+
+              <div class="col-md-9 col-sm-9 col-xs-12">
+
+                <div class="x_panel">
+                    <div class="x_title">
+                      <h2>分支信息</h2>
+                      <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                      </ul>
+
+                      <div class="clearfix"></div>
+                    </div>
+                    <div class="x_title">
+{#                              <h2><p><a href="{% url 'branch_add' app_id=app.id %}" class="btn btn-primary">创建分支</a></p></h2>#}
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a></li>
+                                  </ul>
+                              <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                      <table class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>分支名</th>
+                            <th>分支描述</th>
+                            <th>域名</th>
+                            <th>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for branch in branchs %}
+                              {% for branch_app in branch.app.all%}
+                                  {% if branch_app.name == app.name %}
+                                      <tr>
+                                        <td>{{ branch.name }}</td>
+                                        <td>{{ branch.desc }}</td>
+                                            <td>{{ branch.name }}.{{ branch_app.project.slugName }}.{{ branch_app.name }}.k8s.flashhold.com</td>
+                                        <td>
+
+                                            {% if "release/pro" in branch.name %}
+                                                <a href="{% url "branch_add_hotfix" app_id=branch_app.id hotfix="hotfix" %}" class="btn btn-success" >打标签</a>
+                                                <a href="{% url "branch_add_hotfix" app_id=branch_app.id hotfix="hotfix" %}" class="btn btn-primary" >hotfox</a>
+                                            {% endif %}
+                                            <a href="" class="btn btn-warning" >回滚</a>
+                                            <a href="" class="btn btn-danger" >删除</a>
+                                        </td>
+                                      </tr>
+                                  {% endif %}
+                               {% endfor %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                </div>
+
+                <div>
+
+                  <h4>Recent Activity</h4>
+
+                  <!-- end of user messages -->
+                  <ul class="messages">
+                    <li>
+                      <img src="/static/images/img.jpg" class="avatar" alt="Avatar">
+                      <div class="message_date">
+                        <h3 class="date text-info">24</h3>
+                        <p class="month">May</p>
+                      </div>
+                      <div class="message_wrapper">
+                        <h4 class="heading">Desmond Davison</h4>
+                        <blockquote class="message">Raw denim you probably haven't heard of them jean shorts Austin. Nesciunt tofu stumptown aliqua butcher retro keffiyeh dreamcatcher synth.</blockquote>
+                        <br />
+                        <p class="url">
+                          <span class="fs1 text-info" aria-hidden="true" data-icon=""></span>
+                          <a href="#"><i class="fa fa-paperclip"></i> User Acceptance Test.doc </a>
+                        </p>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="/static/images/img.jpg" class="avatar" alt="Avatar">
+                      <div class="message_date">
+                        <h3 class="date text-error">21</h3>
+                        <p class="month">May</p>
+                      </div>
+                      <div class="message_wrapper">
+                        <h4 class="heading">Brian Michaels</h4>
+                        <blockquote class="message">Raw denim you probably haven't heard of them jean shorts Austin. Nesciunt tofu stumptown aliqua butcher retro keffiyeh dreamcatcher synth.</blockquote>
+                        <br />
+                        <p class="url">
+                          <span class="fs1" aria-hidden="true" data-icon=""></span>
+                          <a href="#" data-original-title="">Download</a>
+                        </p>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="/static/images/img.jpg" class="avatar" alt="Avatar">
+                      <div class="message_date">
+                        <h3 class="date text-info">24</h3>
+                        <p class="month">May</p>
+                      </div>
+                      <div class="message_wrapper">
+                        <h4 class="heading">Desmond Davison</h4>
+                        <blockquote class="message">Raw denim you probably haven't heard of them jean shorts Austin. Nesciunt tofu stumptown aliqua butcher retro keffiyeh dreamcatcher synth.</blockquote>
+                        <br />
+                        <p class="url">
+                          <span class="fs1 text-info" aria-hidden="true" data-icon=""></span>
+                          <a href="#"><i class="fa fa-paperclip"></i> User Acceptance Test.doc </a>
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                  <!-- end of user messages -->
+
+
+                </div>
+
+
+              </div>
+
+              <!-- start project-detail sidebar -->
+              <div class="col-md-3 col-sm-3 col-xs-12">
+
+                <section class="panel">
+
+                  <div class="x_title">
+                    <h2>应用 Summary</h2>
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="panel-body">
+                    <h3 class="green"><i class="fa fa-paint-brush"></i> {{ app.name }}</h3>
+
+                    <p>{{ app.desp }}</p>
+                    <br />
+
+                    <div class="project_detail">
+
+                      <p class="title">开发环境-最新版本</p>
+                      <p>Deveint Inc</p>
+                      <p class="title">测试环境-最新版本</p>
+                      <p>Deveint Inc</p>
+                      <p class="title">预发布环境-最新版本</p>
+                      <p>Deveint Inc</p>
+
+                      <p class="title">应用负责人</p>
+                      <p>Tony Chicken</p>
+                      <p class="title">代码仓库</p>
+                        <p><a href="http://gitlab.flashhold.com/vipshop/demo" target="_blank">http://gitlab.flashhold.com/vipshop/demo</a></p>
+                    </div>
+
+                    <br />
+                    <h5>Project files</h5>
+                    <ul class="list-unstyled project_files">
+                      <li><a href=""><i class="fa fa-file-word-o"></i> Functional-requirements.docx</a>
+                      </li>
+                      <li><a href=""><i class="fa fa-file-pdf-o"></i> UAT.pdf</a>
+                      </li>
+                      <li><a href=""><i class="fa fa-mail-forward"></i> Email-from-flatbal.mln</a>
+                      </li>
+                      <li><a href=""><i class="fa fa-picture-o"></i> Logo.png</a>
+                      </li>
+                      <li><a href=""><i class="fa fa-file-word-o"></i> Contract-10_12_2014.docx</a>
+                      </li>
+                    </ul>
+                    <br />
+
+                    <div class="text-center mtop20">
+                      <a href="#" class="btn btn-sm btn-primary">Add files</a>
+                      <a href="#" class="btn btn-sm btn-warning">Report contact</a>
+                    </div>
+                  </div>
+
+                </section>
+
+              </div>
+              <!-- end project-detail sidebar -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- ECharts -->
+  <script src="/static/vendors/echarts/dist/echarts.min.js"></script>
+{% endblock javascripts %}

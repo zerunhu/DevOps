@@ -1,0 +1,191 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>数据集</h3>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <p><a href="{% url 'dataset_add' %}" class="btn btn-primary" >添加数据集</a></p>
+
+              <!-- start project list -->
+              <table class="table table-striped projects">
+                <thead>
+                  <tr>
+                    <th style="width: 1%">#</th>
+                    <th style="width: 15%">名称</th>
+                    <th style="width: 15%">上传文件名</th>
+                    <th style="width: 15%">最新修改时间</th>
+                    <th style="width: 10%">项目</th>
+                    <th style="width: 10%">创建人</th>
+                    <th style="width: 40%">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for dataset in datasets %}
+                  <tr>
+                    <td>#</td>
+                    <td>{{ dataset.name }}</td>
+                      <td>{{ dataset.f }}</td>
+                      <td>
+                          {{ dataset.createDate }}
+                      </td>
+                      <td>
+                         {{ dataset.project_name }}
+                      </td>
+                      <td>
+                         {{ dataset.user }}
+                      </td>
+                    <td>
+                        <a href="{% url 'dataset_update' pk=dataset.id %}" class="btn btn-primary btn-xs" >全量修改 </a>
+                        <a href="{% url 'dataset_increUpdate' pk=dataset.id %}" class="btn btn-primary btn-xs" >增量修改 </a>
+                        <a href="{% url 'dataset_download' pk=dataset.id %}" class="btn btn-primary btn-xs" >下载 </a>
+                        <a href="{% url 'dataset_delete' pk=dataset.id %}" class="btn btn-danger btn-xs">删除</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- end project list -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <form action="#" method="post">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">制作数据集说明</h4>
+                  </div>
+
+                  <div class="modal-body">
+
+                    <div class="row">
+                        <ul class="list-unstyled timeline">
+                          <li>
+                            <div class="block">
+                              <div class="tags">
+                                <a href="" class="tag">
+                                  <span>登录</span>
+                                </a>
+                              </div>
+                              <div class="block_content">
+                                <p class="excerpt">docker login {{ harbor_url }}
+                                </p>
+                              </div>
+                            </div>
+                          </li>
+                          <li>
+                            <div class="block">
+                              <div class="tags">
+                                <a href="" class="tag">
+                                  <span>拉取镜像</span>
+                                </a>
+                              </div>
+                              <div class="block_content">
+
+                                <p class="excerpt" id="pull_init_image">
+                                </p>
+                              </div>
+                            </div>
+                          </li>
+                          <li>
+                            <div class="block">
+                              <div class="tags">
+                                <a href="" class="tag">
+                                  <span>制作数据集</span>
+                                </a>
+                              </div>
+                              <div class="block_content">
+                                <p class="excerpt" id="run_image"></p>
+                                <p class="excerpt" id="import_data" ></p>
+                                <p class="excerpt" id="commit_image"></p>
+                                <p class="excerpt" id="tag_image"></p>
+                                <p class="excerpt" id="push_image"></p>
+                              </div>
+                            </div>
+                          </li>
+                          <li>
+                            <div class="block">
+                              <div class="tags">
+                                <a href="" class="tag">
+                                  <span>安装数据集chart</span>
+                                </a>
+                              </div>
+                              <div class="block_content">
+
+                                <p class="excerpt" id="install_dataset"></p>
+
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <input type="submit" class="btn btn-primary" value="提交" />
+                  </div>
+                </form>
+
+                </div>
+              </div>
+            </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+    <script type="text/javascript">
+        function  handle(dataset_id) {
+            $.ajax({
+                async:true,
+                url: "{% url 'get_dataset' %}",
+                data: {"dataset_id":dataset_id},
+                type: "get",
+                dataType:'json',
+                success:function(result){
+
+                        var rsn = result.dataset;
+                        var image_name = rsn.imageName.split("/").pop().split(":")[0];
+                        var pull_init_image = "1、 docker pull "+rsn.software;
+                        var run_image = "1、 sudo docker run -d -p3306:3306 -e MYSQL_USER=root"+" -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_ROOT_HOST=%"+" --name="+image_name+" "+rsn.software;
+                        var import_data = "2、 sudo docker exec -it "+image_name+" mysql -uroot -p";
+                        var commit_image = "3、 sudo docker commit "+image_name+" "+rsn.imageName;
+                        var push_image = "<p style='color:red'> 4、 sudo docker push "+rsn.imageName+"</p>";
+                        var install_dataset = "1、 curl {{ devops_url }}/install_dataset?dataset_id="+rsn.id;
+                        $("#pull_init_image").html(pull_init_image);
+                        $("#run_image").html(run_image);
+                        $("#import_data").html(import_data);
+                        $("#commit_image").html(commit_image);
+                        $("#push_image").html(push_image);
+                        $("#install_dataset").html(install_dataset);
+                    },
+            });
+
+    }
+    </script>
+{% endblock javascripts %}

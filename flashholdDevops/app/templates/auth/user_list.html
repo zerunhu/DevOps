@@ -1,0 +1,83 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户</h3>
+        </div>
+
+        <div class="title_right">
+          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Search for...">
+              <span class="input-group-btn">
+                <button class="btn btn-default" type="button">Go!</button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <p><a href="{% url 'user_add' %}" class="btn btn-primary" >添加用户</a></p>
+
+              <!-- start project list -->
+              <table class="table table-striped projects">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">用户名</th>
+                    <th style="width: 20%">中文名</th>
+                    <th style="width: 20%">所属组</th>
+                    <th style="width: 20%">email</th>
+                  　<th style="width: 10%">当前/最大环境部署数</th>
+                    <th style="width: 20%">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for user in object_list %}
+                  <tr>
+                    <td>{{ user.username }}</td>
+                      <td>{{ user.last_name }}</td>
+                      <td>
+                         {{ user.groups }}
+                      </td>
+                      <td>{{ user.email }}</td>
+                      <td>{{ user.currentDeployNum }}/{{user.maxDeployNum }}</td>
+                    <td>
+                      <a href="{% url 'user_delete' pk=user.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 删除 </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- end project list -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+
+</script>
+{% endblock javascripts %}

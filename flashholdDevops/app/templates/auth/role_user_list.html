@@ -1,0 +1,70 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>{{ role_name }}</h3>
+        </div>
+
+        <div class="title_right">
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+<!--              <p><a href="{% url 'role_user_add' pk=role_id %}" class="btn btn-primary" >添加用户</a></p>-->
+              <p><a href="/roleuser/add/{{ role_id }}" class="btn btn-primary" style="float:left">添加用户</a></p>
+<!--              <p><a href="{% url 'user_role_list' %}" class="btn btn-primary"  style="float:right">返回</a></p>-->
+
+              <table class="table table-striped projects">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">用户名</th>
+                    <th style="width: 30%">邮箱</th>
+                    <th >操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for user in object_list %}
+                  <tr>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>
+                          <a href="{% url 'role_user_delete' rid=role_id uid=user.id %}"
+                              class="btn btn-danger btn-xs">删除</a>
+                      </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- end project list -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+
+</script>
+{% endblock javascripts %}
+

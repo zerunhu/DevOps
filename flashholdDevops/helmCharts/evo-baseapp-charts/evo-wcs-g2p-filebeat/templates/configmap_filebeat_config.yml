@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config-wcs-g2p
+  labels:
+    k8s-app: filebeat
+data:
+  filebeat.yml: |-
+    filebeat.inputs:
+    - type: log
+      enabled: true
+      paths:
+        - /opt/docker/evo-wcs-g2p/logs/log_report.log
+    setup.template.settings:
+      index.number_of_shards: 1
+    setup.kibana:
+    output.logstash:
+      hosts: ["logstash:5001"]
+    processors:
+      - add_host_metadata:
+      - add_cloud_metadata:

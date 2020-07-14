@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "demo.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "demo.name" . }}
+    helm.sh/chart: {{ include "demo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    platform: "devops"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "demo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "demo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        platform: "devops"
+    spec:
+      initContainers:
+        - name: dependency
+          image: harbor2.flashhold.com/library/busybox:latest
+          command: ['sh', '-c', 'until nc -z {{ .Values.dependency.service }} {{ .Values.dependency.port }} ; do echo waiting for {{ .Values.dependency.service }}; sleep 2; done;']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.env.SPRING_PROFILES_ACTIVE }}"
+            - name: db.url
+              value: "{{ .Values.env.db_url }}"
+            - name: db.username
+              value: "{{ .Values.env.db_username }}"
+            - name: db.password
+              value: "{{ .Values.env.db_password }}"
+            - name: registry
+              value: "{{ .Values.env.registry }}"
+            - name: host.ip
+              value: "{{ .Values.env.host_ip }}"
+            - name: redis.host
+              value: "{{ .Values.env.redis_host }}"
+            - name: release.name
+              value: "{{ .Values.env.release_name }}"
+            - name: rmqnamesrv
+              value: "{{ .Values.env.rmqnamesrv }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http-{{ .Values.containerPort.port1 }}
+              containerPort: {{ .Values.containerPort.port1 }}
+              protocol: TCP
+            - name: http-{{ .Values.containerPort.port2 }}
+              containerPort: {{ .Values.containerPort.port2 }}
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 7001
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+            periodSeconds: 10              
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

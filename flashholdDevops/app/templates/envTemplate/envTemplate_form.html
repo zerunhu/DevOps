@@ -1,0 +1,95 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+<div style="margin-left:241px">
+<iframe src="http://192.168.21.230:8055/#/environmentTemplates?projectId={{project_id}}" style="width:100%;height:1700px;" scrolling="no"></iframe>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+var feature_apps = [];
+jQuery(document).ready(function($) {
+
+     $.ajax({
+                async:true,
+                url: "{% url 'get_baseapp_bygroup' %}",
+                data: {},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+
+<!--                    items.push( "<option value='" + val + "'>" + val + "</option>" );-->
+                    items.push( "<label id='baseapp_label'> <input type='checkbox' name='baseApp' value='" + val + ":" + key + "'>" + val + "</label><br>");
+                    });
+                    $("#content").html(items.join(""));
+                    $("#content").trigger("chosen:updated");
+                    },
+            });
+
+      $.ajax({
+                async:true,
+                url: "{% url 'get_baseapp_branches' %}",
+                data: {},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+                        var item = [];
+                        item.push( "<select id='a' name='baseApp_branch' style='margin-bottom: 8px;font-size: 14px;'>");
+                        for(var i=0;i<val.length;i++){
+                            item.push( " <option  value='" + val[i] + "'>" + val[i] + "</option>" );
+                        }
+                        item.push( "</select><br>" )
+                        items.push(item)
+                    });
+                    $("#content2").html(items.join(""));
+                    $("#content2").trigger("chosen:updated");
+                    },
+            });
+
+<!--     $('#search').multiselect({-->
+<!--                search: {-->
+<!--                    left: '<input type="text" name="q" class="form-control" placeholder="Search..." />',-->
+<!--                    right: '<input type="text" name="q" class="form-control" placeholder="Search..." />',-->
+<!--                },-->
+<!--            });-->
+
+    $("#send").click(function (e) {
+        {#$("input[name='featureAppOrder']").val(feature_apps.join(","));#}
+        {#$("input[name='jsonData']").val(localStorage.getItem("env_baseapp_key"));#}
+        $("#form").submit();
+    });
+
+
+})
+function handle() {
+    var apps_str = [];
+
+    $.ajax({
+                async:false,
+                url: "{% url 'get_app_name' %}",
+                data: {"apps":feature_apps.join(",")},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    $.each( result, function( key, val ) {
+                    apps_str.push( val.name );
+                    });
+                    },
+            });
+    $("#featureApp_order").html(apps_str.join("-->"));
+
+
+}
+
+</script>
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

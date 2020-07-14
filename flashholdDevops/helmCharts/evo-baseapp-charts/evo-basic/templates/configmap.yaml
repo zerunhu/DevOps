@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: register-erika-config-{{ include "demo.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "demo.name" . }}
+    helm.sh/chart: {{ include "demo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  evo-prefer-ip: "true"
+  evo-basic-ip: "{{ .Values.configMap.host_ip }}"
+  evo-basic-port: "{{ .Values.configMap.host_port }}"

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app.kubernetes.io/name: {{ include "demo.name" . }}
+    helm.sh/chart: {{ include "demo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.containerPort.port1 }}
+      targetPort: {{ .Values.containerPort.port1 }}
+      protocol: TCP
+      name: http-{{ .Values.containerPort.port1 }}
+    - port: {{ .Values.containerPort.port2 }}
+      targetPort: {{ .Values.containerPort.port2 }}
+      protocol: TCP
+      name: http-{{ .Values.containerPort.port2 }}
+  selector:
+    app.kubernetes.io/name: {{ include "demo.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

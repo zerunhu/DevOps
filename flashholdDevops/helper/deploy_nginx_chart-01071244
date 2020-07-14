@@ -1,0 +1,673 @@
+# coding=utf-8
+
+import os, sys
+from app.models import EnvTemplate
+from django.conf import settings
+import shutil, errno
+from pyhelm.chartbuilder import ChartBuilder
+from pyhelm.tiller import Tiller
+from Api.dnsApi import DnsApi
+import datetime
+
+reload(sys)
+
+# evo.conf 的开头部分
+first_content = (
+    "\tlocation ~ ^/web/([^/]+)/(favicon.jpg) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_pass http://evo-$1-web/$2;\n"
+    "\t\tproxy_redirect off;\n"
+    "\t}\n"
+
+    "\tlocation ~ ^/web/([^?/]+)/evo/file/download/([^?/]+) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tset $bff evo-$1-web;\n"
+    "\t\tproxy_pass http://$bff/evo/file/download/$2;\n"
+    "\t\tproxy_redirect off;\n"
+    "\t\tproxy_cookie_path /$bff /;\n"
+    "\t\tproxy_set_header Host $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_set_header HTTP_X_FORWARDED_FOR $remote_addr;\n"
+    "\t\tproxy_set_header X-NginX-Proxy true;\n"
+    "\t}\n"
+
+    "\tlocation ~ ^/web/([^/]+) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tset $bff evo-$1-web;\n"
+    "\t\tproxy_pass http://$bff/;\n"
+    "\t\tproxy_redirect off;\n"
+    "\t\tproxy_cookie_path /$bff /;\n"
+    "\t\tproxy_set_header Host $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_set_header HTTP_X_FORWARDED_FOR $remote_addr;\n"
+    "\t\tproxy_set_header X-NginX-Proxy true;\n"
+    "\t\tsub_filter 'routerBase = \"/\"' 'routerBase = \"/web/$1/\"';\n"
+    "\t\tsub_filter 'href=\"/favicon.jpg\"' 'href=\"/web/$1/favicon.jpg\"';\n"
+    "\t\tsub_filter_once off;\n"
+    "\t\tsub_filter_last_modified off;\n"
+    "\t}\n"
+
+    "\tlocation = /evo/socket.io/ {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tset $bff evo-quicktron-web;\n"
+    "\t\tset $params \"\";\n"
+    "\t\tif ($args ~ ^evoService=([^&]+)&(.+)$) {\n"
+    "\t\t\tset $bff evo-$1-web;\n"
+    "\t\t\tset $params $2;\n"
+    "\t\t}\n"
+    "\t\tproxy_pass http://$bff/evo/socket.io/?$params;\n"
+    "\t\tproxy_redirect off;\n"
+    "\t\tproxy_cookie_path / /;\n"
+    "\t\tproxy_set_header Host $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_set_header HTTP_X_FORWARDED_FOR $remote_addr;\n"
+    "\t\tproxy_set_header X-NginX-Proxy true;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t}\n"
+)
+
+# evo.conf 公共的部分
+second_conf = ("\tlocation ^~ /api/{appPrefix} {\n"
+               "\t\topentracing_operation_name $host$uri;\n"
+               "\t\topentracing_trace_locations on;\n"
+               "\t\topentracing_propagate_context;\n"
+               "\t\tproxy_http_version 1.1;\n"
+               "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+               "\t\tproxy_set_header Connection \"upgrade\";\n"
+               "\t\tproxy_read_timeout   3600s;\n"
+               "\t\tproxy_set_header Host      $host;\n"
+               "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+               "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+               "\t\tproxy_pass http://{appName};\n"
+               "\t}\n"
+
+               "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+               "\t\topentracing_operation_name $host$uri;\n"
+               "\t\topentracing_trace_locations on;\n"
+               "\t\topentracing_propagate_context;\n"
+               "\t\tproxy_http_version 1.1;\n"
+               " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+               "\t\tproxy_set_header Connection \"upgrade\";\n"
+               "\t\tproxy_read_timeout   3600s;\n"
+               "\t\tproxy_set_header Host      $host;\n"
+               "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+               "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+               "\t\tproxy_pass http://{appName}/$1?$args;\n"
+               "\t}\n"
+               )
+
+# evo.conf basic特有的部分
+basic_conf = ("\tlocation ^~ /api/{appPrefix} {\n"
+              "\t\topentracing_operation_name $host$uri;\n"
+              "\t\topentracing_trace_locations on;\n"
+              "\t\topentracing_propagate_context;\n"
+              "\t\tproxy_http_version 1.1;\n"
+              "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+              "\t\tproxy_set_header Connection \"upgrade\";\n"
+              "\t\tproxy_read_timeout   3600s;\n"
+              "\t\tproxy_set_header Host      $host;\n"
+              "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+              "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+              "\t\tproxy_pass http://{appName};\n"
+              "\t}\n"
+
+              "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+              "\t\topentracing_operation_name $host$uri;\n"
+              "\t\topentracing_trace_locations on;\n"
+              "\t\topentracing_propagate_context;\n"
+              "\t\tproxy_http_version 1.1;\n"
+              " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+              "\t\tproxy_set_header Connection \"upgrade\";\n"
+              "\t\tproxy_read_timeout   3600s;\n"
+              "\t\tproxy_set_header Host      $host;\n"
+              "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+              "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+              "\t\tproxy_pass http://{appName};\n"
+              "\t}\n"
+              )
+
+# station 特有的部分
+station_conf = ("\tlocation ^~ /api/{appPrefix} {\n"
+                "\t\topentracing_operation_name $host$uri;\n"
+                "\t\topentracing_trace_locations on;\n"
+                "\t\topentracing_propagate_context;\n"
+                "\t\tproxy_http_version 1.1;\n"
+                "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+                "\t\tproxy_set_header Connection \"upgrade\";\n"
+                "\t\tproxy_read_timeout   3600s;\n"
+                "\t\tproxy_set_header Host      $host;\n"
+                "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+                "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                "\t\tproxy_pass http://{appName};\n"
+                "\t}\n"
+
+                "\tlocation ^~ /dev/{appPrefix} {\n"
+                "\t\topentracing_operation_name $host$uri;\n"
+                "\t\topentracing_trace_locations on;\n"
+                "\t\topentracing_propagate_context;\n"
+                "\t\tproxy_http_version 1.1;\n"
+                "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+                "\t\tproxy_set_header Connection \"upgrade\";\n"
+                "\t\tproxy_read_timeout   3600s;\n"
+                "\t\tproxy_set_header Host      $host;\n"
+                "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+                "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                "\t\tproxy_pass http://{appName};\n"
+                "\t}\n"
+
+                "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+                "\t\topentracing_operation_name $host$uri;\n"
+                "\t\topentracing_trace_locations on;\n"
+                "\t\topentracing_propagate_context;\n"
+                "\t\tproxy_http_version 1.1;\n"
+                " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+                "\t\tproxy_set_header Connection \"upgrade\";\n"
+                "\t\tproxy_read_timeout   3600s;\n"
+                "\t\tproxy_set_header Host      $host;\n"
+                "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+                "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                "\t\tproxy_pass http://{appName};\n"
+                "\t}\n"
+                )
+
+# agv-simulation-carrier 特有的部分
+agv_conf = (
+    "\tlocation ^~ /DriveUnitSimulation {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+)
+
+
+# evo-wcs-g2p 特有的部分
+evo_wcs_g2p_conf = (
+    "\tlocation ^~ /api/wcs/g2p {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ^~ /api/{appPrefix}  {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+    
+    "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+)
+
+# evo-wcs-g2p 特有的部分
+evo_wcs_g2p_conf = (
+    "\tlocation ^~ /api/wcs/g2p {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ^~ /api/{appPrefix}  {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+)
+
+# evo-wcs-si 特有的部分
+evo_wcs_si_conf = (
+    "\tlocation ^~ /api/wcs/standardized {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ^~ /api/{appPrefix}  {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+)
+
+# evo-wcs-engine 特有的部分
+evo_wcs_engine_conf = (
+    "\tlocation ^~ /api/wcs/engine {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ^~ /api/{appPrefix}  {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+
+    "\tlocation ~* ^/{appPrefix}/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    " \t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://{appName};\n"
+    "\t}\n"
+)
+
+# "\t\tproxy_pass http://{appName}:{appPort}/$1?$args;\n"
+# evo.conf 结尾部分
+third_conf = (
+    "\tlocation ^~ /registry {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://registry/;\n"
+    "\t}\n"
+
+    "\tlocation ~ ^/(eureka/|admin/?) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://registry;\n"
+    "\t}\n"
+
+    "\tlocation ^~ /rmqconsole {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://rmq;\n"
+    "\t}\n"
+
+    "\tlocation ~* ^/backend_web/([^/]*)/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://$host:$1/$2?$args;\n"
+    "\t}\n"
+
+    "\tlocation ~* ^/api/([^/]*)/([^/]*)/(.*) {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t\tproxy_set_header Connection \"upgrade\";\n"
+    "\t\tproxy_read_timeout   3600s;\n"
+    "\t\tproxy_set_header Host      $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_pass http://$host:$2/api/$1/$3?$args;\n"
+    "\t}\n"
+
+    "\tlocation ~ /.* {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\tset $bff evo-quicktron-web;\n"
+    "\t\tif ($http_referer ~ ^http://[^?/]+/web/([^?/]+).* ) {\n"
+    "\t\t\tset $bff evo-$1-web;\n"
+    "\t\t}\n"
+    "\t\tproxy_pass http://$bff;\n"
+    "\t\tproxy_redirect off;\n"
+    "\t\tproxy_cookie_path / /;\n"
+    "\t\tproxy_set_header Host $host;\n"
+    "\t\tproxy_set_header X-Real-IP $remote_addr;\n"
+    "\t\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+    "\t\tproxy_set_header HTTP_X_FORWARDED_FOR $remote_addr;\n"
+    "\t\tproxy_set_header X-NginX-Proxy true;\n"
+    "\t\tproxy_http_version 1.1;\n"
+    "\t\tproxy_set_header Upgrade $http_upgrade;\n"
+    "\t}\n"
+
+    "\tlocation = / {\n"
+    "\t\topentracing_operation_name $host$uri;\n"
+    "\t\topentracing_trace_locations on;\n"
+    "\t\topentracing_propagate_context;\n"
+    "\t\trewrite ^ /web/quicktron;\n"
+    "\t}\n"
+)
+
+# upstream.conf 公共部分
+upstream_cf = (
+    "\tupstream {appName} {\n"
+    "\t\tip_hash;\n"
+    "\t\tserver {appName}:{appPort};\n"
+    "\t}\n"
+)
+
+# upstream.conf 结尾部分
+up_second_conf = (
+    "\tmap $http_upgrade $connection_upgrade {\n"
+    "\t\tdefault upgrade;\n"
+    "\t\t'' close;\n"
+    "\t}\n"
+)
+
+
+def InstallNginxChart(envName, envTemplate_id):
+    app = EnvTemplate.objects.get(id=envTemplate_id).baseApp
+
+    appList = app.split(",")
+    print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                          fileName=os.path.basename(__file__),
+                                                          func=sys._getframe(
+                                                          ).f_code.co_name,
+                                                          num=sys._getframe().f_lineno,
+                                                          args="appList: {}".format(appList))
+
+    print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                          fileName=os.path.basename(__file__),
+                                                          func=sys._getframe(
+                                                          ).f_code.co_name,
+                                                          num=sys._getframe().f_lineno,
+                                                          args="copy nginx chart to {}  ".format(envName))
+
+    try:
+        shutil.copytree("{}/charts/nginx".format(settings.PROJECT_ROOT),
+                        "{}/tmp/{}-nginx".format(settings.PROJECT_ROOT, envName))
+    except OSError as exc:  # python >2.5
+        if exc.errno == errno.ENOTDIR:
+            shutil.copy("{}/charts/nginx".format(settings.PROJECT_ROOT),
+                        "{}/tmp/{}-nginx".format(settings.PROJECT_ROOT, envName))
+        else:
+            print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                                  fileName=os.path.basename(__file__),
+                                                                  func=sys._getframe(
+                                                                  ).f_code.co_name,
+                                                                  num=sys._getframe().f_lineno,
+                                                                  args="Exception when Create nginx chart: %s\n" % exc)
+            return False
+
+    print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                          fileName=os.path.basename(__file__),
+                                                          func=sys._getframe(
+                                                          ).f_code.co_name,
+                                                          num=sys._getframe().f_lineno,
+                                                          args="start to create evo.conf and  upstream.conf ")
+
+    try:
+        evoConf = "{}/tmp/{}-nginx/conf/evo.conf".format(settings.PROJECT_ROOT, envName)
+        upstreamConf = "{}/tmp/{}-nginx/conf/upstream.conf".format(settings.PROJECT_ROOT, envName)
+        if os.path.exists(evoConf):
+            os.remove(evoConf)
+
+        if os.path.exists(upstreamConf):
+            os.remove(upstreamConf)
+
+        wconf = open(evoConf, "a+")
+        upconf = open(upstreamConf, "a+")
+
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="写evo.conf第一部分 ")
+
+        wconf.write(first_content)
+
+        for app in appList:
+            if ":" in app:
+                appName = app.split(":")[0]
+            else:
+                appName = app
+
+            # if appName == "evo-agv-simulation-carrier":
+            #     continue
+
+            # if not settings.SERVICE_PORT.haskey(appName):
+            #     continue
+
+            appPort = str(settings.SERVICE_PORT[appName])
+            appPrefix = appName.replace("evo-", "")
+
+            bb = second_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",
+                                                                                                 appPrefix)
+            if appName == "evo-basic":
+                bb = basic_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",
+                                                                                                    appPrefix)
+            if appName == "evo-station":
+                bb = station_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",
+                                                                                                      appPrefix)
+            if appName == "evo-agv-simulation-carrier":
+                bb = agv_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",
+                                                                                                  appPrefix)
+            if appName == "evo-wcs-g2p":
+                bb = evo_wcs_g2p_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",appPrefix)
+
+            if appName == "evo-wcs-si":
+                bb = evo_wcs_si_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",appPrefix)
+
+            if appName == "evo-wcs-engine":
+                bb = evo_wcs_engine_conf.replace("{appName}", appName).replace("{appPort}", appPort).replace("{appPrefix}",appPrefix)
+
+            wconf.write(bb)
+            print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                                  fileName=os.path.basename(__file__),
+                                                                  func=sys._getframe(
+                                                                  ).f_code.co_name,
+                                                                  num=sys._getframe().f_lineno,
+                                                                  args="追加upstream.conf ")
+
+            uc = upstream_cf.replace("{appName}", appName).replace("{appPort}", appPort)
+            upconf.write(uc)
+
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="写evo.conf 和 upstream.conf 结尾部分 ")
+
+        wconf.write(third_conf)
+        upconf.write(up_second_conf)
+        wconf.close()
+        upconf.close()
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="evo.conf 和 upstream.conf 写入完毕，下面开始打包chart")
+
+        valueConf = open("{}/tmp/{}-nginx/values.yaml".format(settings.PROJECT_ROOT, envName), "r")
+        content = valueConf.read()
+        valueConf.close()
+        hostName = content.replace("evo23.flashhold.com", "{}.flashhold.com".format(envName))
+        with open("{}/tmp/{}-nginx/values.yaml".format(settings.PROJECT_ROOT, envName), "w") as newValue:
+            newValue.write(hostName)
+        newValue.close()
+
+        t = Tiller(settings.TILLER_SERVER["address"], settings.TILLER_SERVER["port"])
+        chart = ChartBuilder(
+            {'name': 'nginx',
+             'source': {'type': 'directory', 'location': "{}/tmp/{}-nginx".format(settings.PROJECT_ROOT, envName)}})
+        # chart.get_metadata()
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="start to install nginx chart: ")
+
+        install_result = t.install_release(chart.get_helm_chart(), dry_run=False, namespace=envName,
+                                           name='{}-nginx'.format(envName))
+
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="success to install chart, next to start to add dns for {}.k8s: {}".format(
+                                                                  envName, install_result))
+
+        dns = DnsApi()
+        dns.update(domain="{deploy_name}".format(deploy_name=envName))
+
+        return True
+
+    except  Exception as e:
+        print "{time} {fileName} {num} {func} {args} ".format(time=datetime.datetime.now(),
+                                                              fileName=os.path.basename(__file__),
+                                                              func=sys._getframe(
+                                                              ).f_code.co_name,
+                                                              num=sys._getframe().f_lineno,
+                                                              args="Exception when install nginx chart: %s\n" % e)
+
+        return False
+

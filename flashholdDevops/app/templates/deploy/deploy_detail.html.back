@@ -1,0 +1,853 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} {{ deploy.name }}详情 {% endblock title %}
+
+{% block sidebar_class %}menu_fixed{% endblock sidebar_class %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3 style="color:red">域名:{{ domain }}</h3>
+        </div>
+
+{#        <div class="title_right">#}
+{#          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">#}
+{#            <div class="input-group">#}
+{#              <input type="text" class="form-control" placeholder="Search for...">#}
+{#              <span class="input-group-btn">#}
+{#                <button class="btn btn-default" type="button">Go!</button>#}
+{#              </span>#}
+{#            </div>#}
+{#          </div>#}
+{#        </div>#}
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+                <br />
+
+                        <h2>项目应用</h2>
+
+                        <table class="table table-striped projects">
+                        <thead>
+                          <tr>
+                            <th style="width: 10%">应用名</th>
+                          　<th style="width: 10%">分支名</th>
+                          　<th style="width: 10%">commit号</th>
+                            <th style="width: 10%">端口</th>
+{#                            <th style="width: 10%">cpu</th>#}
+{#                            <th style="width: 10%">内存</th>#}
+                            <th style="width: 10%">状态</th>
+                            <th style="width: 15%">操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                                {% for item in featureApp %}
+                                    <tr>
+                                        <td>{{ item.app_name }}</td>
+                                        <td>{{ item.branch_name }}</td>
+                                        <td>{{ item.commit_name }}</td>
+{#                                        <td>{{ item.image_chart }}</td>#}
+                                        <td>{{ item.service_port }}</td>
+{#                                        <td id="{{ item.app_name }}-cpu">loading...</td>#}
+{#                                        <td id="{{ item.app_name }}-memory">loading...</td>#}
+                                        <td><b>{{ item.deploy_status }}</b></td>
+                                        <td>
+                                          <a href="#" class="btn btn-success btn-xs"   data-toggle="modal" data-target=".bs-example-modal-lg" onclick='handle("{{ item.id }}");'>变更 </a>
+                                          <a href="#" class="btn btn-warning btn-xs"   data-toggle="modal" data-target=".bs-log-modal-lg" onclick='handle_pod_log("{{ deploy.envName }}","{{ item.app_name }}");'>日志 </a>
+
+            {#                              <a href="#" class="btn btn-danger btn-xs" onclick='handle_delete("{{ item.id }}");'>删除 </a>#}
+            {#                              <a href="{% url 'deploy_rollback' pk=item.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 回滚 </a>#}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                        </tbody>
+                      </table>
+
+
+{#            </div>#}
+
+              <!-- start project-detail sidebar -->
+              <!-- end project-detail sidebar -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+                <br />
+
+                        <h2>基线应用</h2>
+                        <row>
+                              <a href="#" class="btn btn-success"   data-toggle="modal" data-target=".bs-add-deploy-modal-lg" onclick='add_deploy();'>新增 </a>
+
+                        </row>
+                        <table class="table table-striped projects">
+                        <thead>
+                          <tr>
+                            <th style="width: 10%">应用名</th>
+                          　<th style="width: 10%">分支名</th>
+                          　<th style="width: 10%">commit号</th>
+                            <th style="width: 10%">端口</th>
+                            <th style="width: 10%">cpu</th>
+                            <th style="width: 10%">内存</th>
+                            <th style="width: 10%">重启次数</th>
+                            <th style="width: 10%">原因</th>
+                            <th style="width: 10%">状态</th>
+                            <th style="width: 15%">操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                                {% for item in baseApp %}
+                                    <tr>
+                                        <td>{{ item.app_name }}</td>
+                                        <td>{{ item.branch_name }}</td>
+                                        <td>{{ item.commit_name }}</td>
+{#                                        <td>{{ item.image_chart }}</td>#}
+                                        <td>{{ item.service_port }}</td>
+                                        <td id="{{ item.app_name }}-cpu">loading...</td>
+                                        <td id="{{ item.app_name }}-memory">loading...</td>
+                                        <td id="{{ item.app_name }}-restart_count">loading...</td>
+                                        <td id="{{ item.app_name }}-reason">loading...</td>
+                                        <td><b>{{ item.deploy_status }}</b></td>
+                                        <td>
+                                          <a href="#" class="btn btn-info btn-xs"  onclick='console("{{ deploy.envName }}","{{ item.app_name }}");'>控制台 </a>
+                                          <a href="#" class="btn btn-primary btn-xs"   data-toggle="modal" data-target=".bs-example-modal-lg" onclick='handle("{{ item.id }}");'>变更 </a>
+                                          <a href="#" class="btn btn-success btn-xs"   data-toggle="modal" data-target=".bs-log-modal-lg" onclick='handle_pod_log("{{ deploy.envName }}","{{ item.app_name }}");'>日志 </a>
+                                          <a href="#" class="btn btn-warning btn-xs"   onclick='restart_pod("{{ deploy.envName }}","{{ item.app_name }}");'>重启 </a>
+                                          <a href="#" class="btn btn-danger btn-xs"    onclick='delete_deploy("{{ deploy.id }}","{{ item.id }}");'>删除 </a>
+            {#                              <a href="#" class="btn btn-danger btn-xs" onclick='handle_delete("{{ item.id }}");'>删除 </a>#}
+            {#                              <a href="{% url 'deploy_rollback' pk=item.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 回滚 </a>#}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                        </tbody>
+                      </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% if dataset != None %}
+    　<div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+                <br />
+
+                        <h2>镜像数据集</h2>
+                        <row>
+                              <a href="#" class="btn btn-success"   data-toggle="modal" data-target=".bs-add-deploy-modal-lg" onclick='add_deploy();'>新增 </a>
+
+                        </row>
+                        <table class="table table-striped projects">
+                        <thead>
+                          <tr>
+                            <th style="width: 10%">数据集名</th>
+                          　<th style="width: 10%">镜像地址</th>
+                            <th style="width: 15%">操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                                {% for item in dataset %}
+                                    <tr>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.image_name }}</td>
+                                        <td>
+                                          <a href="#" class="btn btn-info btn-xs"  onclick='console("{{ deploy.envName }}","{{ item.app_name }}");'>控制台 </a>
+                                          <a href="#" class="btn btn-primary btn-xs"   data-toggle="modal" data-target=".bs-example-modal-lg" onclick='handle("{{ item.id }}");'>变更 </a>
+                                          <a href="#" class="btn btn-success btn-xs"   data-toggle="modal" data-target=".bs-log-modal-lg" onclick='handle_pod_log("{{ deploy.envName }}","{{ item.app_name }}");'>日志 </a>
+                                          <a href="#" class="btn btn-warning btn-xs"   onclick='restart_pod("{{ deploy.envName }}","{{ item.app_name }}");'>重启 </a>
+                                          <a href="#" class="btn btn-danger btn-xs"    onclick='delete_deploy("{{ deploy.id }}","{{ item.id }}");'>删除 </a>
+            {#                              <a href="#" class="btn btn-danger btn-xs" onclick='handle_delete("{{ item.id }}");'>删除 </a>#}
+            {#                              <a href="{% url 'deploy_rollback' pk=item.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 回滚 </a>#}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                        </tbody>
+                      </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+                <br />
+
+                        <h2>公共服务</h2>
+
+                        <table class="table table-striped projects">
+                        <thead>
+                          <tr>
+                            <th style="width: 15%">名称</th>
+                          　<th style="width: 15%">域名</th>
+                          　<th style="width: 15%">调试端口</th>
+                            <th style="width: 15%">状态</th>
+                          　<th style="width: 15%">操作</th>　　
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in commonApp %}
+                                <tr>
+                                    <td><b>{{ item.name }}</b></td>
+                                    <td><b>{{ item.domain }}</b></td>
+                                    <td><b style="color:red">{{ item.random_port }}</b></td>
+                                    <td><b>{{ item.deploy_status }}</b></td>
+                                    <td>
+                                          <a href="#" class="btn btn-info btn-xs"  onclick='console("{{ deploy.envName }}","{{ item.name }}");'>控制台 </a>
+                                          <a href="#" class="btn btn-primary btn-xs"   data-toggle="modal" data-target=".bs-dataset-modal-lg" onclick='get_dataset_list("{{ deploy.id }}");'>变更数据集 </a>
+                                          <a href="#" class="btn btn-success btn-xs"   data-toggle="modal" data-target=".bs-log-modal-lg" onclick='handle_pod_log("{{ deploy.envName }}","{{ item.name }}");'>日志 </a>
+                                          <a href="#" class="btn btn-warning btn-xs"   onclick='restart_pod("{{ deploy.envName }}","{{ item.name }}");'>重启 </a>
+                                        </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                      </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+                <br />
+
+                        <h2>TCP服务</h2>
+
+                        <table class="table table-striped projects">
+                        <thead>
+                          <tr>
+                          　<th style="width: 15%">域名</th>
+                          　<th style="width: 15%">端口</th>　
+                          　<th style="width: 15%">映射端口</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in featureTcpService %}
+                                <tr>
+                                    <td><b>{{ item.deploy.envName }}.tcp.k8s.flashhold.com</b></td>
+                                    <td><b>{{ item.port }}</b></td>
+                                    <td><b style="color:red">{{ item.randomPort }}</b></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                      </table>
+            </div>
+          </div>
+        </div>
+      </div>
+{#      <div class="row">#}
+{#        <div class="col-md-12">#}
+{#          <div class="x_panel">#}
+{##}
+{#            <div class="x_content">#}
+{#                <h2>数据集</h2>#}
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+{#                <br />#}
+{#                <table class="table table-striped projects">#}
+{#                <thead>#}
+{#                  <tr>#}
+{#                    <th style="width: 15%">镜像地址</th>#}
+{#                    <th style="width: 15%">域名</th>#}
+{#                    <th style="width: 10%">端口</th>#}
+{#                    <th style="width: 10%">调试端口</th>#}
+{#                    <th style="width: 10%">状态</th>#}
+{#                    <th style="width: 15%">操作</th>#}
+{#                  </tr>#}
+{#                </thead>#}
+{#                <tbody>#}
+{#                        <tr>#}
+{#                            <td>{{ dataset.image_name }}</td>#}
+{#                            <td>{{ dataset.domain }}</td>#}
+{#                            <td>{{ dataset.port }}</td>#}
+{#                            <td><b style="color:red">{{ dataset.random_port }}</b></td>#}
+{#                            <td><b>{{ dataset.deploy_status }}</b></td>#}
+{#                            <td>#}
+{#                              <a href="#" class="btn btn-success btn-xs"   data-toggle="modal" data-target=".bs-dataset-modal-lg" onclick='handle_dataset("{{ dataset.id }}");'>变更 </a>#}
+{##}
+                                {#                              <a href="#" class="btn btn-danger btn-xs" onclick='handle_delete("{{ item.id }}");'>删除 </a>#}
+{#                              <a href="{% url 'deploy_rollback' pk=item.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 回滚 </a>#}
+{#                            </td>#}
+{#                        </tr>#}
+{#                </tbody>#}
+{#              </table>#}
+{##}
+{#            </div>#}
+{##}
+{#              <!-- start project-detail sidebar -->#}
+{#              <!-- end project-detail sidebar -->#}
+{##}
+{#            </div>#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+{#      <div class="row">#}
+{#        <div class="col-md-12">#}
+{#          <div class="x_panel">#}
+{##}
+{#            <div class="x_content">#}
+{#                <h2>部署历史</h2>#}
+{#              <div class="col-md-9 col-sm-9 col-xs-12">#}
+{#                <br />#}
+{#                <table class="table table-striped projects">#}
+{#                <thead>#}
+{#                  <tr>#}
+{#                    <th style="width: 15%">信息</th>#}
+{#                    <th style="width: 15%">时间</th>#}
+{#                    <th style="width: 15%">操作</th>#}
+{#                  </tr>#}
+{#                </thead>#}
+{#                <tbody>#}
+{#                    {% for item in deploy_history %}#}
+{#                        <tr>#}
+{#                            <td>{{ item.msg }}</td>#}
+{#                            <td>{{ item.createDate }}</td>#}
+{#                            <td>#}
+{#                              <a href="#" class="btn btn-primary btn-xs"   data-toggle="modal" data-target=".log-modal-lg" onclick='handle_log("{{ item.id }}");'>查看 </a>#}
+{#                              <a href="{% url 'deploy_rollback' pk=item.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 回滚 </a>#}
+{#                            </td>#}
+{#                        </tr>#}
+{#                    {% endfor %}#}
+{#                </tbody>#}
+{#              </table>#}
+{##}
+{#            </div>#}
+{##}
+{#              <!-- start project-detail sidebar -->#}
+{#              <!-- end project-detail sidebar -->#}
+{##}
+{#            </div>#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+    </div>
+  </div>
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">选择Chart版本</h4>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+            <div class="item form-group">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">Chart版本<span class="required">*</span>
+              </label>
+                <input name="old_image_id" type="hidden" value=""/>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="selected_chart">
+                  </select>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top: 20px">
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">内存：<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12" >
+                      <input name="memory" type="text" value=""/>Mi
+                  </div>
+                </div>
+          </div>
+{#          <div class="row" style="margin-top: 20px">#}
+{#                <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">CPU：<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12" >#}
+{#                      <input name="cpu" type="text" value="0.02" placeholder="0.02"/>核#}
+{#                  </div>#}
+{#                </div>#}
+{#          </div>#}
+          <div class="row" style="margin-top: 20px">
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">Chart配置<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12" >
+{#                      <input type="hidden" id="chart_config" value="" class="resizable_textarea form-control" />#}
+                      <textarea type="hidden" id="chart_config" rows="20"  cols="30" class="resizable_textarea form-control" ></textarea>
+                  </div>
+                </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default"  　data-dismiss="modal">关闭</button>
+        <button id="send" data-loading-text="Loading..." class="btn btn-primary" >提交</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade bs-add-deploy-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">选择应用</h4>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+            <div class="item form-group">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">Chart版本<span class="required">*</span>
+              </label>
+                <input name="old_image_id" type="hidden" value=""/>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select name="add_deploy_baseapp" id="add_deploy_selected_chart" class="form-control"></select>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="padding-top: 20px">
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">Chart配置<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12" >
+                      <textarea id="add_deploy_chart_config" rows="20"  cols="30" class="resizable_textarea form-control" ></textarea>
+                  </div>
+                </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default"　data-dismiss="modal">关闭</button>
+        <button id="add_deploy_send" data-loading-text="Loading..." class="btn btn-primary" >提交</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal fade bs-dataset-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">选择数据集版本</h4>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+            <div class="item form-group">
+              <label class="control-label col-md-3 col-sm-3 col-xs-12" for="project">数据集版本<span class="required">*</span>
+              </label>
+              <div class="col-md-6 col-sm-6 col-xs-12">
+                  <select id="dateset_selected">
+                  </select>
+              </div>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+        <input type="button" id="dataset_send" class="btn btn-primary" value="提交" />
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade bs-log-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">日志</h4>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+              <textarea id="pod_log" rows="50"  cols="100" class="resizable_textarea form-control" style="background:rosybrown"></textarea>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+        <button id="log_send" class="btn btn-primary" >提交</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal fade log-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+    <form  method="post">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">日志</h4>
+      </div>
+
+      <div class="modal-body">
+          <pre>
+          <div id="deploy_log"> </div>
+          </pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+      </div>
+    </form>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop='static'>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">提示</h4>
+      </div>
+      <div class="modal-body">
+        请稍候。。。<span id="result"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- ECharts -->
+<script type="text/javascript">
+function  handle(image_id) {
+            $("#selected_chart").html("");
+            $.ajax({
+                async:false,
+                url: "{% url 'image_upgrade_select' %}",
+                data: {"image_id": image_id },
+                type: "get",
+                dataType:'json',
+                success:function(result){
+                        var text = "";
+                        var old_image_id = "";
+                        result.forEach(function (v,i) {
+                            text = text + '<option value ="'+v.image_id+'">'+v.image_name+"-"+v.chart_version+'</option>';
+                            old_image_id = v.old_image_id;
+                        });
+                        $("#selected_chart").html(text);
+                        $("#selected_chart").trigger("chosen:updated").chosen({width: "95%"});
+                        $("input[name='old_image_id']").val(old_image_id);
+                    }
+            });
+            $("#selected_chart").click();
+}
+
+function  get_dataset_list(deploy_id) {
+            $.ajax({
+                async:false,
+                url: "{% url 'get_dataset_list' %}",
+                data: {"deploy_id": deploy_id },
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                        var text = "";
+                        result.forEach(function (v,i) {
+                            text = text + '<option value ="'+v.dataset_id+'">'+v.dataset_name+'</option>';
+                        });
+                        $("#dateset_selected").html(text);
+                        $("#dateset_selected").chosen({width: "95%"})
+                    }
+            });
+            $("#dateset_selected").click();
+}
+
+function add_deploy() {
+    $.ajax({
+                async:true,
+                url: "{% url 'get_baseapp' %}",
+                data: {},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+
+                    items.push( "<option value='" + val.image_id + "'>" + val.image_name + "</option>" );
+                    });
+                    $("#add_deploy_selected_chart").html(items.join(""));
+                    {#$("#search").trigger("chosen:updated");#}
+                    $("#add_deploy_selected_chart").chosen({width: "95%"}).change(function () {
+                        $.ajax({
+                            async:false,
+                            cache:false,
+                            url: "{% url 'get_image_config' %}",
+                            data: {"image_id":$(this).val()},
+                            type: "post",
+                            dataType:'json',
+                            success:function(result){
+                                $("#add_deploy_chart_config").val(result.config);
+                            },
+                        });
+                    })
+                    },
+            });
+}
+
+
+function  handle_log(deployhistory_id) {
+            $.ajax({
+                async:false,
+                url: "{% url 'get_deploy_history' %}",
+                data: {"deployhistory_id": deployhistory_id },
+                type: "get",
+                success:function(result){
+                        $("#deploy_log").html(result)
+                    }
+            });
+}
+
+function  console(namespace,name) {
+            $.ajax({
+                async:false,
+                url: "{% url 'get_console_url' %}",
+                data: {"namespace":namespace,"name":name},
+                type: "post",
+                success:function(result){
+                        var url = result.url;
+                        window.open(url);
+                    }
+            });
+}
+
+function  handle_pod_log(namespace,name) {
+            $.ajax({
+                async:false,
+                url: "{% url 'get_pod_log' %}",
+                data: {"namespace": namespace,"name": name },
+                type: "post",
+                success:function(result){
+                        $("#pod_log").html(result)
+                    }
+            });
+}
+
+function  restart_pod(namespace,name) {
+            $.ajax({
+                async:false,
+                 beforeSend: function(){
+                    if (confirm("确认重启服务吗?")){
+                        return true;
+                    }else{
+                        return false;
+                    }
+                },
+                url: "{% url 'delete_pod' %}",
+                data: {"namespace": namespace,"name": name },
+                type: "post",
+                success:function(result){
+                        location.reload()
+                    }
+            });
+}
+
+function  delete_deploy(deploy_id,image_id) {
+            $.ajax({
+                async:false,
+                beforeSend: function(){
+                    if (confirm("确认删除服务吗?")){
+                         $('#loading').modal('show');
+                    }else{
+                        return false;
+                    }
+                },
+                complete: function () {
+                    $('#loading').modal('hide');
+                },
+                url: "{% url 'image_delete' %}",
+                data: {"image_id": image_id,"deploy_id": deploy_id },
+                type: "post",
+                success:function(result){
+                        location.reload()
+                    }
+            });
+}
+
+function handle_delete(image_id) {
+    $.ajax({
+                async:false,
+                url: "{% url 'image_delete' %}",
+                data: {"image_id": image_id,"deploy_id":"{{ deploy.id }}"},
+                beforeSend: function () {
+                    if (confirm("你真的想删除这个release吗？")) {
+                        return true;
+                    }else{
+                        return false;
+                    }
+                },
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                        location.reload();
+                    }
+            });
+}
+  $(function () {
+      if (sessionStorage.getItem('ptab')){
+          var tab = sessionStorage.getItem('ptab');
+          $("#"+tab).tab('show')
+      }
+    $('#myTab a').click(function (e) {
+        e.preventDefault()
+        sessionStorage.setItem("ptab", this.id);
+        $(this).tab('show')
+    });
+       $("#send").click(function () {
+       $(this).button("loading");
+        var image_id = $("#selected_chart").val();
+        var deploy_id = "{{ deploy.id }}";
+        var old_image_id = $("input[name='old_image_id']").val();
+        {#$(this).attr("disabled","disabled");#}
+        $.ajax({
+                async:false,
+                url: "{% url 'image_upgrade' %}",
+                data: {"image_id": image_id,
+                        "deploy_id":deploy_id,
+                        "old_image_id":old_image_id,
+                        "image_config":$("#chart_config").val(),
+                        "memory":$("input[name='memory']").val()},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                       location.reload();
+                    }
+            });
+        });
+
+        $("#dataset_send").click(function () {
+        $(this).val("loading");
+        var dataset_id = $("#dateset_selected").val();
+        var deploy_id = "{{ deploy.id }}";
+        $.ajax({
+                async:true,
+                url: "{% url 'dataset_upgrade' %}",
+                data: {"deploy_id":deploy_id,"dataset_id":dataset_id},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    if (result.success == 1){
+                         alert("更新失败");
+                    }
+                        location.reload();
+                    }
+
+            });
+        });
+
+        $("#add_deploy_send").click(function () {
+           $(this).button("loading")
+            var image_id = $("#add_deploy_selected_chart").val();
+            var deploy_id = "{{ deploy.id }}";
+
+            {#$(this).attr("disabled","disabled");#}
+            $.ajax({
+                    async:false,
+                    url: "{% url 'image_upgrade' %}",
+                    data: {"image_id": image_id,"deploy_id":deploy_id,"image_config":$("#add_deploy_chart_config").val()},
+                    type: "post",
+                    dataType:'json',
+                    success:function(result){
+                           location.reload();
+                        }
+                });
+            })
+
+      $("#selected_chart").on('click',function () {
+                        $.ajax({
+                            async:false,
+                            cache:false,
+                            url: "{% url 'get_image_config' %}",
+                            data: {"image_id":$(this).val()},
+                            type: "post",
+                            dataType:'json',
+                            success:function(result){
+                                $("#chart_config").val(result.config);
+                            },
+                        });
+                        var re=/memory: (\d+)/i;
+                        var b = re.exec($("#chart_config").val());
+                        $("input[name='memory']").val(b[1]);
+
+
+
+                  });
+
+        $.ajax({
+                async:false,
+                url: "{% url 'get_pod_monitor_resource' %}",
+                data: {'deploy_name':"{{ deploy.envName }}",'app_names':"{{ baseApp_str }}"},
+                type: "post",
+                dataType:'json',
+                success:function(result) {
+                    $.each(result, function (k, v) {
+                        $.each(v, function (k1, v1) {
+                            if (k1 == "memory") {
+                                if (v1){
+                                    $("#" + k + "-memory").html(v1)
+                                }else{
+                                    $("#" + k + "-memory").html("无")
+                                }
+
+                            } else if (k1 == "cpu") {
+                                if (v1){
+                                    $("#" + k + "-cpu").html(v1)
+                                }else{
+                                    $("#" + k + "-cpu").html("无")
+                                }
+                            } else if (k1 == "restart_count") {
+                                    if (v1){
+                                        $("#" + k + "-restart_count").html(v1)
+                                    }else if (v1 == 0){
+                                        $("#" + k + "-restart_count").html(0)
+                                    }else{
+                                        $("#" + k + "-restart_count").html("无")
+                                    }
+                            } else if (k1 == "reason") {
+                                    if (v1){
+                                        $("#" + k + "-reason").html(v1)
+                                    }else{
+                                        $("#" + k + "-reason").html("无")
+                                    }
+                            }
+                        })
+                    })
+                }
+            });
+  })
+</script>
+{#  <script src="/static/vendors/echarts/dist/echarts.min.js"></script>#}
+{% endblock javascripts %}

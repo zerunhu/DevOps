@@ -1,0 +1,77 @@
+# Default values for demo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: harbor2.flashhold.com/evo-baseapp/evo-rcs-web
+  tag: 2.5.2-20032001
+  pullPolicy: IfNotPresent
+
+env:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  db_url: "mysql:3306"
+  db_username: "root"
+  db_password: "123456"
+  registry: "registry:8761"
+  host_ip: ""
+  redis_host: "redis"
+  release_name: "evo-rcs-web"
+  rmqnamesrv: "rmq:9876"
+ 
+dependency:
+  service: "evo-quicktron-web"
+  port: "7010"
+
+service:
+  type: ClusterIP
+  name: evo-rcs-web
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort:
+  port1: 7008
+  targetPort1: 7001
+  port2: 7018
+  targetPort2: 80 
+  
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: deploy_name.k8s.flashhold.com
+      paths:
+        - path: /evo-rcs-web
+          port: 7001
+    - host: deploy_name.k8s.flashhold.com
+      paths:
+        - path: /evo-rcs-web-client
+          port: 80          
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: 
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+  # cpu: 100m
+    memory: 512Mi
+  requests:
+    cpu: 0.05
+    memory: 128Mi
+
+nodeSelector:
+  hosttype: node
+
+tolerations: []
+
+affinity: {}

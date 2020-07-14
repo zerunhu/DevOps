@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  evo-basic-ip: "evo-basic"
+  evo-basic-port: "8023"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: deploy-1578451175-evo-basic
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/name: evo-basic
+    helm.sh/chart: evo-basic-1.0.0
+  name: register-erika-config-evo-basic
+  namespace: deploy-1578451175

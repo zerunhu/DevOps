@@ -1,0 +1,71 @@
+# Default values for demo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: {{repository}}
+  tag: {{tag}}
+  pullPolicy: Always
+
+env:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  db_url: "{{db_url}}"
+  db_username: "{{db_username}}"
+  db_password: "{{db_password}}"
+  registry: "{{registry_host}}"
+  host_ip: "{{host_ip}}"
+  redis_host: "{{redis_host}}"
+  release_name: "{{release_name}}"
+  rmqnamesrv: "{{rmqnamesrv}}"
+
+dependency:
+  service: "evo-basic"
+  port: "8023"
+
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort:
+  port1: 8073
+  port2: 5010
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: deploy_name.k8s.flashhold.com
+      paths:
+        - path: /evo-wcs-si
+          port: 8073
+    - host: deploy_name.k8s.flashhold.com
+      paths:
+        - path: /evo-wcs-si
+          port: 5010
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: 
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    #cpu: 1
+    memory: 1024Mi
+  requests:
+    cpu: 0.1
+    memory: 512Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

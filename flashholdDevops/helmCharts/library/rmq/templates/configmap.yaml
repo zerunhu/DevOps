@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  broker.conf: |
+   namesrvAddr = {{default "rmq:9876" .Values.config.broker.namesrvAddr}}
+   brokerClusterName = {{default "DefaultCluster" .Values.config.broker.brokerClusterName}}
+   brokerName = {{default "broker-a" .Values.config.broker.brokerName}}
+   brokerId = {{default "0" .Values.config.broker.brokerId}}
+{{- if .Values.config.broker.brokerIP1 -}}
+   brokerIP1={{ .Values.config.broker.brokerIP1 }}
+{{- end }}
+   listenPort={{default "10911" .Values.config.broker.listenPort}}
+   deleteWhen = {{default "04" .Values.config.broker.deleteWhen}}
+   fileReservedTime = "48"
+   brokerRole =  {{default "ASYNC_MASTER" .Values.config.broker.brokerRole}}
+   flushDiskType = {{default "ASYNC_FLUSH" .Values.config.broker.flushDiskType}}
+   autoCreateTopicEnable=true

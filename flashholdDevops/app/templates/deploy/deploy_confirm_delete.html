@@ -1,0 +1,54 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} 部署 {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3><div id="delete">删除部署<div></h3>
+        </div>
+
+      </div>
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" novalidate>{% csrf_token %}
+                 <p>你真的想清楚删除"{{ object }}"部署吗? </p>
+
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    {#<button type="button" class="close" data-dismiss="modal">取消</button>#}
+                      <a href="{% url 'project_list' %}"  class="btn btn-primary">取消</a>
+                    <input id="send" type="submit" class="btn btn-success" value="提交" />
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="application/javascript">
+    $(function(){
+        $("#send").click(function () {
+            $(this).val("loading");
+            $("#delete").html("正在努力删除中，不要关闭人家哟")
+        })
+    })
+</script>
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

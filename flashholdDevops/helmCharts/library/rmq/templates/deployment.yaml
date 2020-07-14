@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rmq.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "rmq.name" . }}
+    helm.sh/chart: {{ include "rmq.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    platform: "devops"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rmq.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rmq.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        platform: "devops"
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-namesrv
+          image: "{{ .Values.namesrv_image.repository }}:{{ .Values.namesrv_image.tag }}"
+          imagePullPolicy: {{ .Values.namesrv_image.pullPolicy }}
+          ports:
+            - name: http-namesrv
+              containerPort: 9876
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.broker_image.enable }}
+        - name: {{ .Chart.Name }}-broker
+          image: "{{ .Values.broker_image.repository }}:{{ .Values.broker_image.tag }}"
+          imagePullPolicy: {{ .Values.broker_image.pullPolicy }}
+          command: ["/bin/sh","-c","mqbroker -c /etc/rocketmq/broker.conf"]
+          env:
+            - name: JAVA_OPTS
+              value:  "-Duser.home=/opt"
+            - name: NAMESRV_ADDR
+              value:  "127.0.0.1:9876"
+            - name: JAVA_OPT_EXT
+              value: "-server -Xms128m -Xmx128m -Xmn128m"
+          ports:
+            - name: http-broker
+              containerPort: 10909
+              protocol: TCP
+            - name: http-broker2
+              containerPort: 10911
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 9876
+            initialDelaySeconds: 20
+          volumeMounts:
+          - name: broker-config
+            mountPath: /etc/rocketmq
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- end }}
+        - name: {{ .Chart.Name }}-console
+          image: "{{ .Values.console_image.repository }}:{{ .Values.console_image.tag }}"
+          imagePullPolicy: {{ .Values.console_image.pullPolicy }}
+          env:
+            - name: JAVA_OPTS 
+              value: "-Drocketmq.namesrv.addr=127.0.0.1:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false"
+          ports:
+            - name: http-console
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 9876
+            initialDelaySeconds: 20
+          resources:
+            limits:
+              memory: 1024Mi
+            requests:
+              memory: 256Mi
+              cpu: 0.05
+      volumes:
+        - name: broker-config
+          configMap:
+            name: {{ .Release.Name }}
+            items:
+            - key: broker.conf
+              path: broker.conf
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

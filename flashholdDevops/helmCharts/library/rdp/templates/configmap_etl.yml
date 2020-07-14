@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-etl
+  labels:
+    k8s-app: rdp
+data:
+  etl_cfg.json: |-
+    {
+      "db_connection_strings": {
+        "evo_wds_base": "mysql://root:123456@mysql:3306/evo_wds_base?charset=utf8",
+        "evo_wes_inventory": "mysql://root:123456@mysql:3306/evo_wes_inventory?charset=utf8",
+        "evo_wes_replenish": "mysql://root:123456@mysql:3306/evo_wes_replenish?charset=utf8",
+        "evo_wes_picking": "mysql://root:123456@mysql:3306/evo_wes_picking?charset=utf8"
+      }
+    }

@@ -1,0 +1,72 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户</h3>
+        </div>
+
+        <div class="title_right">
+<!--          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
+<!--            <div class="input-group">-->
+<!--              <input type="text" class="form-control" placeholder="Search for...">-->
+<!--              <span class="input-group-btn">-->
+<!--                <button class="btn btn-default" type="button">Go!</button>-->
+<!--              </span>-->
+<!--            </div>-->
+<!--          </div>-->
+        </div>
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <p><a href="{% url 'user_permission_add' %}" class="btn btn-primary" >添加用户权限</a></p>
+
+              <table class="table table-striped projects">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">用户名</th>
+                    <th style="width: 60%">权限</th>
+                    <th style="width: 20%">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for user in object_list %}
+                  <tr>
+                      <td>{{ user.user }}</td>
+                      <td>{{ user.permission }}</td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- end project list -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+
+</script>
+{% endblock javascripts %}
+

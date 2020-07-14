@@ -1,0 +1,114 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} user {% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>数据集</h3>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+         {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+
+              <form action="" method="post" class="form-horizontal form-label-left" enctype="multipart/form-data"　>{% csrf_token %}
+                    <span class="section">增量修改数据集</span>
+
+<div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.name.id_for_label }}">{{ form.name.label_tag }}<span class="required"></span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12" style="margin-top:7px">
+                      <input type="text"  value="{{ dataset_name }}" name="name">
+                  </div>
+                </div>
+
+                <div class="item form-group">
+
+                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="">项目名<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      <select name="project_name" id="content2">
+                          {% for i in project_name %}
+                          <option value="{{ i }}">{{ i }}</option>
+                          {% endfor %}
+                      </select>
+                  </div>
+                </div>
+
+{#                 <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.imageVersion.id_for_label }}">{{ form.imageVersion.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.imageVersion }}{{ form.imageVersion.errors }}#}
+{#                  </div>#}
+{#                </div>#}
+                <div class="item form-group">
+                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.software.id_for_label }}">{{ form.f.label_tag }}<span class="required">*</span>
+                  </label>
+                  <div class="col-md-6 col-sm-6 col-xs-12">
+                      {{ form.f }}
+                  </div>
+                </div>
+
+{#                <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.username.id_for_label }}">{{ form.username.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.username }}#}
+{#                  </div>#}
+{#                </div>#}
+{#                <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.password.id_for_label }}">{{ form.password.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.password }}#}
+{#                  </div>#}
+{#                </div>#}
+{#                  <div class="item form-group">#}
+{#                  <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.port.id_for_label }}">{{ form.port.label_tag }}<span class="required">*</span>#}
+{#                  </label>#}
+{#                  <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                      {{ form.port }}#}
+{#                  </div>#}
+{#                </div>#}
+                <div class="ln_solid"></div>
+                <div class="form-group">
+                  <div class="col-md-6 col-md-offset-3">
+                    <a href="{% url 'dataset_list' %}" class="btn btn-primary">取消</a>
+                    <button id="send" type="submit" class="btn btn-success">提交</button>
+                  </div>
+                </div>
+              </form>
+
+<div class="item form-group">
+
+          <span style="color:red">注意:
+增量修改数据集适用于对现有数据集的小范围修改，sql的文件不宜过大。
+</span>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <!-- validator -->
+{#  <script src="/static/vendors/validator/validator.js"></script>#}
+{% endblock javascripts %}

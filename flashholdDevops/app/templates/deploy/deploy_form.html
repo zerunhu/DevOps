@@ -1,0 +1,422 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} 部署{% endblock title %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+            <h3><div id="message">部署</div></h3>
+        </div>
+
+        <div class="title_right">
+          <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Search for...">
+              <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">Go!</button>
+                    </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+      {% if error %}
+           <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span>
+              </button>
+              {{ error }}
+            </div>
+          {% endif %}
+      <div class="row">
+
+        <div class="col-md-12 col-sm-12 col-xs-12">
+          <div class="x_panel">
+            <div class="x_title">
+                <h2 >部署环境</h2>
+              <ul class="nav navbar-right panel_toolbox">
+                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </li>
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="#">Settings 1</a>
+                    </li>
+                    <li><a href="#">Settings 2</a>
+                    </li>
+                  </ul>
+                </li>
+                <li><a class="close-link"><i class="fa fa-close"></i></a>
+                </li>
+              </ul>
+              <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+
+              <div id="wizard" class="form_wizard wizard_horizontal">
+                <ul class="wizard_steps">
+                  <li>
+                    <a href="#step-1">
+                      <span class="step_no">1</span>
+                      <span class="step_descr">
+                                        选择应用及环境<br />
+                                        <small></small>
+                                    </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-2">
+                      <span class="step_no">2</span>
+                      <span class="step_descr">
+                                        选择版本及配置<br />
+                                    </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-3">
+                      <span class="step_no">3</span>
+                      <span class="step_descr">
+                                        选择部署模式及数据集<br />
+                                    </span>
+                    </a>
+                  </li>
+                </ul>
+                <form  id="form" method="post" a class="form-horizontal form-label-left">
+                <div id="step-1">
+                     <h2 class="StepTitle">选择环境</h2>
+                     <div style="display: none;">
+                     <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.project.id_for_label }}">{{ form.project.label_tag }}<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.project }}{{ form.project.errors }}
+                          </div>
+                    </div>
+                     </div>
+{#                    <div class="item form-group">#}
+{#                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.branch.id_for_label }}">{{ form.branch.label_tag }}<span class="required">*</span>#}
+{#                          </label>#}
+{#                          <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                              {{ form.branch }}{{ form.branch.errors }}#}
+{#                          </div>#}
+{#                    </div>#}
+                    <div class="item form-group">
+                      <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.envName.id_for_label }}">{{ form.envName.label_tag }}<span class="required">*</span>
+                      </label>
+                      <div class="col-md-6 col-sm-6 col-xs-12">
+                          {{ form.envName }}{{ form.envName.errors }}
+                      </div>
+                    </div>
+                     <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.envDesc.id_for_label }}">{{ form.envDesc.label_tag }}<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.envDesc }}{{ form.envDesc.errors }}
+                          </div>
+                    </div>
+                    <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.group.id_for_label }}">{{ form.group.label_tag }}<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.group }}{{ form.group.errors }}
+                          </div>
+                    </div>
+
+                </div>
+                <div id="step-2">
+                  <h2 class="StepTitle">选择版本及配置</h2>
+                    <div class="form-horizontal form-label-left">
+
+                        <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.envTemplate.id_for_label }}">{{ form.envTemplate.label_tag }}<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.envTemplate }}{{ form.envTemplate.errors }}
+                          </div>
+                        </div>
+
+                         <div class="item form-group">
+                             <label class="control-label col-md-3 col-sm-3 col-xs-12" for="version">项目应用<span class="required">*</span>
+                            </label>
+                             <div class="col-md-6 col-sm-6 col-xs-12">
+                                <div class="accordion" id="accordion1" role="tablist" aria-multiselectable="true">
+                                    <div class="panel">
+                                      <a class="panel-heading" role="tab" id="headingOne1" data-toggle="collapse" data-parent="#accordion1" href="#collapseOne1" aria-expanded="true" aria-controls="collapseOne">
+                                        <h4 class="panel-title">项目应用<span id="featureApp_order"></span></h4>
+                                      </a>
+                                      <div id="collapseOne1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="panel-body">
+                                          <table class="table table-striped">
+                                            <thead>
+                                              <tr>
+                                                <th>应用名</th>
+                                                <th>版本</th>
+                                                <th>配置</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody id="featureApp">
+
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
+                        <div class="item form-group">
+                             <label class="control-label col-md-3 col-sm-3 col-xs-12" for="version">基线应用<span class="required">*</span>
+                            </label>
+                             <div class="col-md-6 col-sm-6 col-xs-12">
+                                <div class="accordion" id="accordion1" role="tablist" aria-multiselectable="true">
+                                    <div class="panel">
+                                      <a class="panel-heading" role="tab" id="headingOne1" data-toggle="collapse" data-parent="#accordion1" href="#collapseOne1" aria-expanded="true" aria-controls="collapseOne">
+                                        <h4 class="panel-title">基线应用<span id="featureApp_order"></span></h4>
+                                      </a>
+                                      <div id="collapseOne1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="panel-body">
+                                          <table class="table table-striped">
+                                            <thead>
+                                              <tr>
+                                                <th>应用</th>
+                                                <th>镜像</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody id="commonApp">
+
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
+                        <div class="item form-group">
+                             <label class="control-label col-md-3 col-sm-3 col-xs-12" for="version">公共服务<span class="required">*</span>
+                            </label>
+                             <div class="col-md-6 col-sm-6 col-xs-12">
+                                <div class="accordion" id="accordion1" role="tablist" aria-multiselectable="true">
+                                    <div class="panel">
+                                      <a class="panel-heading" role="tab" id="headingOne1" data-toggle="collapse" data-parent="#accordion1" href="#collapseOne1" aria-expanded="true" aria-controls="collapseOne">
+                                        <h4 class="panel-title">公共服务<span id="featureApp_order"></span></h4>
+                                      </a>
+                                        <div id="collapseOne1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="panel-body">
+                                          <table class="table table-striped">
+                                            <thead>
+                                              <tr>
+                                                <th>应用名</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                            　　<tr>
+                                                <td>{{ form.commonApp }}{{ form.commonApp.errors }}</td>
+                                                </tr>
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
+
+                    </div>
+
+                </div>
+                <div id="step-3">
+                    <h2 class="StepTitle">选择数据集</h2>
+                    <div class="form-horizontal form-label-left">
+{#                         <div class="item form-group">#}
+{#                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.deployMode.id_for_label }}">{{ form.deployMode.label_tag }}<span class="required">*</span>#}
+{#                          </label>#}
+{#                          <div class="col-md-6 col-sm-6 col-xs-12">#}
+{#                              {{ form.deployMode }}{{ form.deployMode.errors }}#}
+{#                          </div>#}
+{#                        </div>#}
+                        <div class="item form-group">
+                          <label class="control-label col-md-3 col-sm-3 col-xs-12" for="{{ form.dataSet.id_for_label }}">{{ form.dataSet.label_tag }}<span class="required">*</span>
+                          </label>
+                          <div class="col-md-6 col-sm-6 col-xs-12">
+                              {{ form.dataSet }}{{ form.dataSet.errors }}
+                          </div>
+                        </div>
+                    </div>
+                </div>
+              </form>
+              </div>
+
+              <!-- End SmartWizard Content -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super}}
+    <script type="application/javascript">
+
+
+        function deploy_onSubmit(){
+            $("#form").submit();
+            $("#deploy_add").html("loading");
+            $("#deploy_add").attr({"disabled":"disabled"});
+            $("#message").html("人家正在努力部署,不要关闭页面哟");
+        }
+
+        $(function () {
+
+            $("#wizard").smartWizard({
+                onFinish: deploy_onSubmit,
+            })
+
+            $('input[name="envName"]').attr({"readonly":"true"});
+            $('input[name="commonApp"]').prop("checked",true);
+
+
+            $("select[name='envTemplate']").click(function () {
+                var env_id = $(this).val();
+                var branch_id = $("select[name='branch']").val();
+                $.ajax({
+                    async:true,
+                    url: "{% url 'get_app_version_by_envtemplate' %}",
+                    data: {"env_id":env_id},
+                    type: "post",
+                    dataType:'json',
+                    success:function(result){
+                        $("#featureApp").html('');
+                        $.each( result, function( type, apps ) {
+                            $.each(apps,function (kapp,iapp) {
+                                var html = '<tr><td>'+kapp+'</td><td><select name2="'+type+'" name="'+kapp+'" attr="'+kapp+'">';
+                                $.each(iapp,function (k,image_info) {
+                                           html +='<option value="'+image_info.image_id+'">'+image_info.image_name+'</option>';
+                                })
+                                html += '</select></td><td><textarea  name=textarea_'+kapp+' rows="10" cols="30" class="resizable_textarea form-control" id="'+kapp+'"></textarea></td></tr>';
+                                $("#"+type).append(html);
+                                html = '';
+                            })
+                        });
+                        $("select[name2='featureApp']").chosen({width: "95%"}).change(function () {
+                            $(this).click();
+                        })
+
+                        },
+                });
+
+                $.ajax({
+                    async:true,
+                    url: "{% url 'get_baseapp_version_by_envtemplate_id' %}",
+                    data: {"env_id":env_id},
+                    type: "post",
+                    dataType:'json',
+                    success:function(result){
+                        $("#commonApp").html('');
+                        $.each( result, function( type, apps ) {
+                            $.each(apps,function (kapp,iapp) {
+                                var html = '<tr><td>'+kapp+'</td><td><select name3="'+type+'" name="appapp-'+kapp+'" attr="'+kapp+'">';
+                                $.each(iapp,function (k,image_info) {
+                                           html +='<option value="'+image_info.image_id+'">'+image_info.image_name+'</option>';
+                                })
+                                html += '</select></td></tr>';
+                                $("#"+type).append(html);
+                                html = '';
+                            })
+                        });
+                        $("select[name3='commonApp']").chosen({width: "95%"}).change(function () {
+                            $(this).click();
+                        })
+
+                        },
+                });
+ 
+
+                $.ajax({
+                    async:true,
+                    url: "{% url 'dataSet_default' %}",
+                    data: {"env_id":env_id},
+                    type: "post",
+                    dataType:'json',
+                    success:function(result){
+                        console.log(result)
+                        var html = '<div style="font-size:16px;margin-left:172px">'+result+'</div>'
+                        $("#step-3").append(html)
+                        },
+                });
+
+
+                $("select[name2='featureApp']").click();
+                $.ajax({
+                    async:true,
+                    url: "{% url 'get_baseapp_version_by_envtemplate_id' %}",
+                    data: {"env_id":env_id},
+                    type: "post",
+                    dataType:'json',
+                    success:function(result){
+                        {#$("#search_to").html("");#}
+                        var html = '';
+                        $.each(result,function (k,image_info) {
+                           html +='<option value="'+image_info.image_id+'">'+image_info.image_name+'</option>';
+                        })
+                        $("#search_to").html(html);
+
+
+                        },
+                });
+
+                {#$("select[name2='commonApp']").click();#}
+            });
+
+
+            $("#featureApp").on('click',"select[name2='featureApp']",function () {
+                        var attr = $(this).attr("attr");
+                        $.ajax({
+                            async:true,
+                            cache:false,
+                            url: "{% url 'get_image_config' %}",
+                            data: {"image_id":$(this).val()},
+                            type: "post",
+                            dataType:'json',
+                            success:function(result){
+                                $("#"+attr).val(result.config);
+                            },
+                        });
+                  });
+
+            $('#search').multiselect({
+                search: {
+                    left: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                    right: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                },
+            });
+
+            $.ajax({
+                async:true,
+                url: "{% url 'get_baseapp' %}",
+                data: {},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+
+                    items.push( "<option value='" + val.image_id + "'>" + val.image_name + "</option>" );
+                    });
+                    $("#search").html(items.join(""));
+                    $("#search").trigger("chosen:updated");
+                    },
+            });
+
+            $("select[name='envTemplate']").click();
+            $("#id_dataSet").chosen({width: "40%"});
+
+
+        })
+    </script>
+  <!-- jQuery Smart Wizard -->
+  <script src="/static/vendors/jQuery-Smart-Wizard/js/jquery.smartWizard.js"></script>
+{% endblock javascripts %}

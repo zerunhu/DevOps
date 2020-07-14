@@ -1,0 +1,208 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} group {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="right_col" role="main">
+    <div class="">
+      <div class="page-title">
+        <div class="title_left">
+          <h3>用户组</h3>
+        </div>
+
+      </div>
+
+      <div class="clearfix"></div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="x_panel">
+
+            <div class="x_content">
+{% if user.is_superuser %}
+              <p><a href="{% url 'group_add' %}" class="btn btn-primary" >添加用户组</a></p>
+ {% endif %}
+              <!-- start project list -->
+              <table class="table table-striped projects">
+                <thead>
+                  <tr>
+                    <th style="width: 1%">#</th>
+                    <th style="width: 20%">用户组(英语)</th>
+                    <th style="width: 20%">用户组(中文)</th>
+                    <th style="width: 20%">环境限制数</th>
+                  　<th style="width: 20%">当前环境数</th>
+                    <th style="width: 20%">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for group in object_list %}
+                  <tr>
+                    <td>#</td>
+                    <td><a>{{ group.name }}</a></td>
+                    <td><a>{{ group.nameSlug }}</a></td>
+                  　<td><a>{{ group.group_profile.maxDeployNum }}</a></td>
+                  　<td><a>{{ group.group_profile.currentDeployNum }}</a></td>
+                    <td>
+{% if user.is_superuser %}
+
+                      <a href="#" class="btn btn-primary btn-xs"  data-toggle="modal" data-target=".bs-example-modal-lg" onclick='handle("{{ group.name }}");'><i class="fa fa-folder"></i> 成员 </a>
+                      <a href="{% url 'group_delete' pk=group.id %}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> 删除 </a>
+                      <a href="#" class="btn btn-primary btn-xs" data-toggle="modal" data-target=".bs-envNum-modal-lg" onclick="handle_env({{ group.id }})"> 修改环境数限制 </a>
+ {% endif %}
+<a href="{% url 'group_quota_detail' pk=group.id %}" class="btn btn-primary btn-xs"> 限额详情 </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- end project list -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <form action="{% url 'group_add_users' %}" method="post">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">添加/删除</h4>
+                  </div>
+
+                  <div class="modal-body">
+
+                            <div class="row">
+                                <div class="col-xs-5">
+                                    <select name="from[]" id="search" class="form-control" size="8" multiple="multiple">
+                                    </select>
+                                </div>
+
+                                <div class="col-xs-2">
+                                    <button type="button" id="search_rightAll" class="btn btn-block"><i class="glyphicon glyphicon-forward"></i></button>
+                                    <button type="button" id="search_rightSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
+                                    <button type="button" id="search_leftSelected" class="btn btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
+                                    <button type="button" id="search_leftAll" class="btn btn-block"><i class="glyphicon glyphicon-backward"></i></button>
+                                </div>
+
+                                <div class="col-xs-5">
+                                    <select name="to[]" id="search_to" class="form-control" size="8" multiple="multiple"></select>
+                                </div>
+                            </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <input type="submit" class="btn btn-primary" value="提交" />
+                  </div>
+                </form>
+
+                </div>
+              </div>
+            </div>
+<div class="modal fade bs-envNum-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">修改环境限制数</h4>
+                  </div>
+                  <div class="modal-body">
+                            <div class="row">
+                                <input type="text" name="deployNum" value="" />
+                                <input type="hidden" name="group_id" value=""  />
+                            </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <input type="submit" id="send_env" class="btn btn-primary" value="提交" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+{% endblock content %}
+
+{% block javascripts %}
+  {{ block.super }}
+<script type="text/javascript">
+    function  handle_env(group_id) {
+            $("input[name='group_id']").val(group_id);
+    }
+    var current_group = '';
+    jQuery(document).ready(function($) {
+            $("#send_env").click(function () {
+            $.ajax({
+                async:false,
+                url: "{% url 'alter_deploy_num' %}",
+                data: {"group_id":$("input[name='group_id']").val(),"deploy_num":$("input[name='deployNum']").val()},
+                type: "post",
+                dataType:'json',
+                success:function(result){
+                    location.reload()
+                    },
+                });
+            })
+
+            $('#search').multiselect({
+                search: {
+                    left: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                    right: '<input type="text" name="q" class="form-control" placeholder="Search..." />',
+                },
+                fireSearch: function(value) {
+                    return value.length > 3;
+                }
+            });
+    var options = ajaxform_options("{% url 'group_add_users' %}");
+    $('#submit2').ajaxForm(options);
+    });
+
+    function  handle(group_name) {
+            $.ajax({
+                async:true,
+                url: "{% url 'get_exclude_group_user' %}",
+                data: {"group_name":group_name},
+                type: "get",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+
+                    items.push( "<option value='" + val.username + "'>" + val.surname + "</option>" );
+                    });
+                    $("#search").html(items.join(""));
+                    $("#search").after("<input type='hidden' name='group_name' value='"+group_name+"' />");
+                    $("#search").trigger("chosen:updated");
+                    },
+            });
+
+            $.ajax({
+                async:true,
+                url: "{% url 'get_group_users' %}",
+                data: {"group_name":group_name},
+                type: "get",
+                dataType:'json',
+                success:function(result){
+                    var items = [];
+                    $.each( result, function( key, val ) {
+
+                    items.push( "<option value='" + val.username + "'>" + val.surname + "</option>" );
+                    });
+                    $("#search_to").html(items.join(""));
+                    $("#search_to").trigger("chosen:updated");
+                    },
+            });
+
+    }
+
+    </script>
+{% endblock javascripts %}
+

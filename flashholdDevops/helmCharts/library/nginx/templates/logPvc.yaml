@@ -1,0 +1,24 @@
+{{- if and .Values.logPersistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "nginx-evo.fullname" . }}-log
+  labels:
+    app: {{ template "nginx-evo.name" . }}
+    chart: {{ template "nginx-evo.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  accessModes:
+    - {{ .Values.logPersistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.logPersistence.size | quote }}
+{{- if .Values.logPersistence.storageClass }}
+{{- if (eq "-" .Values.logPersistence.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.logPersistence.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}

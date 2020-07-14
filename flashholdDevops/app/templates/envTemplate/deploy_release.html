@@ -1,0 +1,10 @@
+{% extends "app/base_site.html" %}
+
+{% block title %} 环境 {% endblock title %}
+
+{% block content %}
+<div style="margin-left:241px">
+<iframe src="http://{{cmdb_ip}}/#/releaseappSumList?userId={{ user.id }}" style="width:100%;height:1200px;" scrolling="no"></iframe>
+</div>
+{% endblock content %}
+

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstash.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "logstash.name" . }}
+    helm.sh/chart: {{ include "logstash.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "logstash.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "logstash.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: logstashconfig
+          configMap:
+            name: {{ template "logstash.fullname" . }}-config
+        - name: logstashpipeline
+          configMap:
+            name: {{ template "logstash.fullname" . }}-pipeline
+            items:
+            - key: logstash.conf
+              path: logstash.conf
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          - name: logstashpipeline
+            mountPath: /usr/share/logstash/pipeline/
+          - name: logstashconfig 
+            mountPath: /usr/share/logstash/config/logstash.yml
+            subPath: logstash.yml
+          - name: logstashconfig 
+            mountPath: /usr/share/logstash/config/parse_json_records.rb
+            subPath: parse_json_records.rb
+          ports:
+          {{- range $port := .Values.containerPorts }}
+            - containerPort: {{ $port }}
+              protocol: TCP
+              name: http-{{ $port }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

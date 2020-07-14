@@ -1,0 +1,68 @@
+# Default values for demo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: harbor2.flashhold.com/evo-baseapp/evo-interface
+  tag: 2.4.1-19122007
+  pullPolicy: IfNotPresent
+
+env:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  db_url: "mysql:3306"
+  db_username: "root"
+  db_password: "123456"
+  registry: "registry:8761"
+  host_ip: "{{host_ip}}"
+  redis_host: "redis"
+  release_name: "{{release_name}}"
+  rmqnamesrv: "rmq:9876"
+
+dependency:
+  service: "evo-basic"
+  port: "8023"
+
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort:
+  port1: 10080
+  port2: 5005
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: deploy_name.k8s.flashhold.com
+      paths:
+        - path: /evo-interface
+          port: 10080
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 1
+    memory: 512Mi
+  requests:
+    cpu: 0.05
+    memory: 256Mi
+
+nodeSelector: 
+  hosttype: node
+
+tolerations: []
+
+affinity: {}

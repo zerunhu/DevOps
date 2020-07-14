@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "logstash.fullname" . }}-config
+  labels:
+    app: "{{ template "logstash.fullname" . }}"
+    chart: "{{ .Chart.Name }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+  parse_json_records.rb: |-
+    require 'json'
+    
+    def fromJson(jsonStr = "")
+      return JSON.parse(jsonStr);
+    end
+    
+    def register(params) # 这里通过params获取的参数是在logstash文件中通过script_params传入的 # @message = params["message"]
+    end
+    
+    # {
+    #   "version": "1.0",
+    #   "generator": "RCS",
+    #   "type": "RCS_AGV_REPLAN",
+    #   "content":具体业务数据（由各自业务定义）
+    # }
+    
+    def handleJsonDataItem(dbHash = nil, dataType = nil, add_to = [])
+        if dbHash.nil? || dbHash.class != Hash || dataType.nil?
+          return
+        end
+        dbHash["_db_data_type"] = dataType
+        add_to << LogStash::Event.new(dbHash)
+    end
+    
+    def handleJsonDataWrapper(dbHash = nil, add_to = [])
+      if dbHash.nil? || dbHash.class != Hash
+        return
+      end
+      dbDataType = dbHash["type"]
+      content = dbHash["content"]
+      if content.nil?
+        return
+      end
+    
+      dbData = content
+      if dbData.nil?
+        return
+      elsif dbData.class == Hash
+        handleJsonDataItem(dbData, dbDataType, add_to)
+      elsif dbData.class == Array
+        dbData.each do |item|
+          puts handleJsonDataItem(item, dbDataType, add_to)
+        end
+      else
+        return
+      end
+    end
+    
+    # the filter method receives an event and must return a list of events.
+    # Dropping an event means not including it in the return array,
+    # while creating new ones only requires you to add a new instance of
+    # LogStash::Event to the returned array
+    
+    def filter(event)
+      # _path = event.get('source_path').to_s
+      _message = event.get('message') #log content
+      events = [event]
+    
+      puts '\n--- original event look like: '
+      puts event
+      puts '\n\n'
+    
+      if _message.nil?
+        return events
+      end
+    
+      jsonStrWrapper = _message.match(/datas=>\$\#(.+)\#\$/);
+      if jsonStrWrapper.nil?
+        return events
+      end
+    
+      jsonStr = jsonStrWrapper.captures[0];
+      if jsonStr.nil?
+        return events
+      end
+    
+      dataWrapper = fromJson(jsonStr);
+      if !dataWrapper.nil? && dataWrapper.class == Hash
+        handleJsonDataWrapper(dataWrapper, events);
+      end
+    
+      return events
+    end
+    

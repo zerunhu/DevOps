@@ -28,7 +28,7 @@ gitdb2==2.0.5
 gitlab==1.0.2
 GitPython==2.1.14
 google-auth==1.6.3
-grpcio==1.23.0
+grpcio==1.53.0
 grpcio-tools==1.23.0
 httplib2==0.13.1
 hupper==1.8.1

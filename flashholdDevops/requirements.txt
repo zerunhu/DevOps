@@ -6,7 +6,7 @@ backports.ssl-match-hostname==3.7.0.1
 boto3==1.9.145
 botocore==1.12.209
 cachetools==3.1.1
-certifi==2019.6.16
+certifi==2022.12.7
 chardet==3.0.4
 dataset==1.1.2
 Django==1.11.23

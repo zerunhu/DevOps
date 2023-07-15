@@ -37,7 +37,7 @@ ipaddress==1.0.22
 jmespath==0.9.4
 jsonschema==3.0.2
 kubernetes==10.0.1
-lxml==4.3.5
+lxml==4.9.1
 Mako==1.1.0
 MarkupSafe==1.1.1
 MySQL-python==1.2.5

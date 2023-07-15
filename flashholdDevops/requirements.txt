@@ -26,7 +26,7 @@ functools32==3.2.3.post2
 futures==3.3.0
 gitdb2==2.0.5
 gitlab==1.0.2
-GitPython==2.1.14
+GitPython==3.1.30
 google-auth==1.6.3
 grpcio==1.23.0
 grpcio-tools==1.23.0
